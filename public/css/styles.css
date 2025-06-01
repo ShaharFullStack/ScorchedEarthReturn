@@ -1,0 +1,1733 @@
+/* Military Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+
+/* Global Styles */
+body {
+    margin: 0;
+    overflow: hidden;
+    background: linear-gradient(45deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+    color: #00ff41;
+    font-family: 'Rajdhani', monospace;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+canvas {
+    display: block;
+}
+
+/* Login Screen - Military Command Entry */
+#login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 25% 25%, rgba(139, 69, 19, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(74, 93, 35, 0.4) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(15, 15, 15, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    font-family: 'Orbitron', monospace;
+    backdrop-filter: blur(5px);
+}
+
+.login-content {
+    background: linear-gradient(135deg, 
+        rgba(45, 62, 35, 0.95) 0%, 
+        rgba(35, 45, 25, 0.95) 50%, 
+        rgba(25, 35, 20, 0.95) 100%);
+    padding: 20px 30px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(74, 93, 35, 0.4),
+        inset 0 2px 8px rgba(255, 255, 255, 0.1);
+    border: 4px solid #4a5d23;
+    backdrop-filter: blur(10px);
+    max-width: 500px;
+    width: 90%;
+}
+
+.login-content h1 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 42;
+    font-weight: 900;
+    text-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(255, 215, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.login-content .subtitle {
+    color: #00ff41;
+    margin-bottom: 40px;
+    font-size: 18px;
+    font-family: 'Rajdhani', monospace;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+}
+
+.login-form {
+    margin: 30px;
+}
+
+.startupImage {
+    width: 30%;
+    height: auto;
+    max-width: 400px;
+    mix-blend-mode: multiply;
+}
+
+.login-form label {
+    display: block;
+    color: #00ff41;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+}
+
+.login-form input[type="text"] {
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 18px;
+    font-family: 'Rajdhani', monospace;
+    font-weight: 600;
+    background: linear-gradient(135deg, 
+        rgba(20, 30, 15, 0.9) 0%, 
+        rgba(15, 25, 10, 0.9) 100%);
+    border: 3px solid #4a5d23;
+    border-radius: 8px;
+    color: #00ff41;
+    text-align: center;
+    letter-spacing: 2px;
+    box-shadow: 
+        inset 0 2px 5px rgba(0, 0, 0, 0.5),
+        0 0 10px rgba(74, 93, 35, 0.3);
+    transition: all 0.3s ease;
+    text-shadow: 0 0 3px rgba(0, 255, 65, 0.3);
+}
+
+.login-form input[type="text"]:focus {
+    outline: none;
+    border-color: #6a7d43;
+    box-shadow: 
+        inset 0 2px 5px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(106, 125, 67, 0.6);
+    color: #00ff91;
+    text-shadow: 0 0 5px rgba(0, 255, 145, 0.5);
+}
+
+.login-form input[type="text"]::placeholder {
+    color: rgba(0, 255, 65, 0.4);
+    font-style: italic;
+}
+
+.login-btn {
+    background: linear-gradient(135deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+    border: 3px solid #daa520;
+    color: #fff;
+    padding: 15px 30px;
+    font-size: 18px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.4s ease;
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.4),
+        inset 0 2px 5px rgba(255, 255, 255, 0.2);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+.login-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.2), 
+        transparent);
+    transition: left 0.5s ease;
+}
+
+.login-btn:hover::before {
+    left: 100%;
+}
+
+.login-btn:hover {
+    background: linear-gradient(135deg, #a0522d 0%, #cd853f 50%, #a0522d 100%);
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.4),
+        0 0 25px rgba(218, 165, 32, 0.5),
+        inset 0 2px 5px rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+    border-color: #ffcc00;
+}
+
+.login-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.4),
+        inset 0 2px 5px rgba(255, 255, 255, 0.1);
+}
+
+.login-btn:disabled {
+    background: linear-gradient(135deg, #4a4a4a 0%, #666666 50%, #4a4a4a 100%);
+    border-color: #777;
+    color: #aaa;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+/* UI Container - Military Command Panel Style */
+#ui-container {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 20px;
+    background: linear-gradient(135deg, 
+        rgba(45, 62, 35, 0.95) 0%, 
+        rgba(35, 45, 25, 0.95) 50%, 
+        rgba(25, 35, 20, 0.95) 100%);
+    border: 3px solid #4a5d23;
+    border-radius: 8px;
+    box-shadow: 
+        0 0 20px rgba(74, 93, 35, 0.3),
+        inset 0 2px 5px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.3);
+    font-size: 16px;
+    min-width: 280px;
+    backdrop-filter: blur(5px);
+}
+
+#ui-container::before {
+    content: "⚡ COMMAND CENTER ⚡";
+    display: block;
+    text-align: center;
+    color: #ffd700;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #4a5d23;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+#ui-container p {
+    margin: 8px 0;
+    color: #00ff41;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+    padding: 5px 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid #4a5d23;
+    border-radius: 3px;
+}
+
+/* Military Style Button */
+#ui-container button {
+    background: linear-gradient(135deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+    border: 2px solid #daa520;
+    color: #fff;
+    padding: 12px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    margin-top: 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.3s ease;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 3px rgba(255, 255, 255, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+#ui-container button:hover {
+    background: linear-gradient(135deg, #a0522d 0%, #cd853f 50%, #a0522d 100%);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.4),
+        0 0 15px rgba(218, 165, 32, 0.4),
+        inset 0 1px 3px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+#ui-container button:active {
+    transform: translateY(0px);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.4),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+#ui-container button:disabled {
+    background: linear-gradient(135deg, #4a4a4a 0%, #666666 50%, #4a4a4a 100%);
+    border-color: #777;
+    color: #aaa;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+/* Button Container for UI Controls */
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+/* Settings Button - Quick Access */
+.settings-btn {
+    position: fixed !important;
+    top: 15px !important;
+    right: 15px !important;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #4a5d23 0%, #5d7329 50%, #4a5d23 100%) !important;
+    border: 2px solid #6b8234 !important;
+    color: #00ff41 !important;
+    font-size: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 1500 !important;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 0 12px rgba(74, 93, 35, 0.4),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1) !important;
+    transition: all 0.2s ease !important;
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.5) !important;
+    backdrop-filter: blur(2px) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: auto !important;
+}
+
+.settings-btn:hover {
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(74, 93, 35, 0.6),
+        inset 0 1px 3px rgba(255, 255, 255, 0.2) !important;
+    background: linear-gradient(135deg, #5d7329 0%, #6b8234 50%, #5d7329 100%) !important;
+}
+
+.settings-btn:active {
+    transform: translateY(0px) scale(1.02) !important;
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+
+
+/* Controls Info - Tactical Display */
+#controls-info {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    padding: 15px;
+    background: linear-gradient(135deg, 
+        rgba(35, 45, 25, 0.9) 0%, 
+        rgba(25, 35, 20, 0.9) 50%, 
+        rgba(20, 30, 15, 0.9) 100%);
+    border: 2px solid #4a5d23;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Rajdhani', monospace;
+    color: #00ff41;
+    text-shadow: 0 0 3px rgba(0, 255, 65, 0.3);
+    transition: all 0.5s ease-in-out;
+    opacity: 1;
+    backdrop-filter: blur(3px);
+    box-shadow: 
+        0 0 15px rgba(74, 93, 35, 0.2),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+#controls-info::before {
+    content: "🎯 TACTICAL CONTROLS";
+    display: block;
+    text-align: center;
+    color: #ffd700;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #4a5d23;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+#controls-info.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(200px);
+}
+
+#controls-info p {
+    margin: 3px 0;
+    padding: 2px 5px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+}
+
+/* Mobile Controls - Hidden by default on desktop */
+#mobile-controls {
+    z-index: 25000 !important;
+    display: none;
+}
+
+/* Message Overlay - Military Alert Style */
+#message-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 30px 40px;
+    background: linear-gradient(135deg, 
+        rgba(139, 69, 19, 0.95) 0%, 
+        rgba(160, 82, 45, 0.95) 50%, 
+        rgba(139, 69, 19, 0.95) 100%);
+    border: 4px solid #daa520;
+    color: #fff;
+    font-size: 28px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    text-align: center;
+    border-radius: 15px;
+    display: none;
+    z-index: 100;
+    white-space: pre-line;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    box-shadow: 
+        0 0 30px rgba(218, 165, 32, 0.4),
+        0 10px 25px rgba(0, 0, 0, 0.6),
+        inset 0 2px 5px rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+#message-overlay::before {
+    content: "⚠️ BATTLEFIELD STATUS ⚠️";
+    display: block;
+    font-size: 16px;
+    color: #ffd700;
+    margin-bottom: 15px;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
+
+/* Health Bar Styles - Military HUD */
+.health-bar-container {
+    background: linear-gradient(90deg, #2d2d2d 0%, #3a3a3a 50%, #2d2d2d 100%);
+    border: 2px solid #4a5d23;
+    border-radius: 5px;
+    box-shadow: 
+        0 2px 6px rgba(0, 0, 0, 0.5),
+        inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.health-bar-fill {
+    background: linear-gradient(90deg, #ff4444 0%, #ff6666 50%, #ff4444 100%);
+    box-shadow: 
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        0 0 8px rgba(255, 68, 68, 0.4);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.health-bar-fill.player {
+    background: linear-gradient(90deg, #00ff41 0%, #00ff91 50%, #00ff41 100%);
+    box-shadow: 
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        0 0 8px rgba(0, 255, 65, 0.4);
+}
+
+.health-bar-fill.low-health {
+    background: linear-gradient(90deg, #ff4444 0%, #ff0000 50%, #ff4444 100%);
+    animation: lowHealthPulse 1s infinite alternate;
+}
+
+.health-bar-fill.medium-health {
+    background: linear-gradient(90deg, #ffaa00 0%, #ffcc44 50%, #ffaa00 100%);
+}
+
+.health-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ffffff;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    text-shadow: 
+        0 0 3px rgba(0, 0, 0, 0.8),
+        0 0 6px rgba(0, 255, 65, 0.3);
+    z-index: 10;
+}
+
+.tank-label {
+    font-family: 'Orbitron', monospace;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #00ff41;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+/* Health bar animations */
+@keyframes lowHealthPulse {
+    0% {
+        box-shadow: 
+            inset 0 1px 2px rgba(255, 255, 255, 0.3),
+            0 0 8px rgba(255, 68, 68, 0.4);
+    }
+    100% {
+        box-shadow: 
+            inset 0 1px 2px rgba(255, 255, 255, 0.3),
+            0 0 15px rgba(255, 0, 0, 0.8);
+    }
+}
+
+/* Damage Flash Animation - Enhanced */
+@keyframes damageFlash {
+    0% {
+        border-color: rgba(74, 93, 35, 0.8);
+        box-shadow: 0 0 5px rgba(74, 93, 35, 0.3);
+    }
+    25% {
+        border-color: rgba(255, 255, 0, 1);
+        box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+    }
+    50% {
+        border-color: rgba(255, 0, 0, 1);
+        box-shadow: 0 0 25px rgba(255, 0, 0, 1);
+    }
+    75% {
+        border-color: rgba(255, 140, 0, 1);
+        box-shadow: 0 0 15px rgba(255, 140, 0, 0.8);
+    }
+    100% {
+        border-color: rgba(74, 93, 35, 0.8);
+        box-shadow: 0 0 5px rgba(74, 93, 35, 0.3);
+    }
+}
+
+.health-bar-damage {
+    animation: damageFlash 0.5s ease-in-out;
+}
+
+/* Damage Flash Animation - Enhanced */
+@keyframes damageFlash {
+    0% {
+        border-color: rgba(74, 93, 35, 0.8);
+        box-shadow: 0 0 5px rgba(74, 93, 35, 0.3);
+    }
+    25% {
+        border-color: rgba(255, 255, 0, 1);
+        box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+    }
+    50% {
+        border-color: rgba(255, 0, 0, 1);
+        box-shadow: 0 0 25px rgba(255, 0, 0, 1);
+    }
+    75% {
+        border-color: rgba(255, 140, 0, 1);
+        box-shadow: 0 0 15px rgba(255, 140, 0, 0.8);
+    }
+    100% {
+        border-color: rgba(74, 93, 35, 0.8);
+        box-shadow: 0 0 5px rgba(74, 93, 35, 0.3);
+    }
+}
+
+/* Difficulty Selection Overlay - Military Command Selection */
+#difficulty-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 30% 40%, rgba(139, 69, 19, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(74, 93, 35, 0.3) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(20, 20, 20, 0.9) 0%, rgba(40, 40, 40, 0.9) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    font-family: 'Orbitron', monospace;
+    backdrop-filter: blur(3px);
+}
+
+.difficulty-content {
+    background: linear-gradient(135deg, 
+        rgba(45, 62, 35, 0.95) 0%, 
+        rgba(35, 45, 25, 0.95) 50%, 
+        rgba(25, 35, 20, 0.95) 100%);
+    padding: 50px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.7),
+        0 0 30px rgba(74, 93, 35, 0.3),
+        inset 0 2px 5px rgba(255, 255, 255, 0.1);
+    border: 4px solid #4a5d23;
+    backdrop-filter: blur(8px);
+}
+
+.difficulty-content h2 {
+    color: #ffd700;
+    margin-bottom: 40px;
+    font-size: 36px;
+    font-weight: 900;
+    text-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 15px rgba(255, 215, 0, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.difficulty-content h2::before {
+    content: "🎖️ ";
+}
+
+.difficulty-content h2::after {
+    content: " 🎖️";
+}
+
+.difficulty-options {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.difficulty-btn {
+    background: linear-gradient(135deg, 
+        rgba(60, 75, 45, 0.9) 0%, 
+        rgba(45, 60, 35, 0.9) 50%, 
+        rgba(35, 50, 25, 0.9) 100%);
+    border: 3px solid #4a5d23;
+    border-radius: 15px;
+    padding: 25px;
+    width: 240px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    color: #00ff41;
+    font-family: 'Rajdhani', monospace;
+    font-weight: 600;
+    backdrop-filter: blur(5px);
+    position: relative;
+    overflow: hidden;
+}
+
+.difficulty-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent);
+    transition: left 0.5s ease;
+}
+
+.difficulty-btn:hover::before {
+    left: 100%;
+}
+
+.difficulty-btn:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(74, 93, 35, 0.5);
+    border-color: #6a7d43;
+}
+
+.difficulty-btn h3 {
+    margin: 0 0 20px 0;
+    font-size: 22px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+}
+
+.difficulty-btn p {
+    margin: 8px 0;
+    font-size: 15px;
+    color: #bdc3c7;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.difficulty-btn[data-difficulty="beginner"]:hover {
+    border-color: #27ae60;
+    background: linear-gradient(135deg, 
+        rgba(39, 174, 96, 0.2) 0%, 
+        rgba(46, 204, 113, 0.2) 50%, 
+        rgba(39, 174, 96, 0.2) 100%);
+    box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.4),
+        0 0 25px rgba(39, 174, 96, 0.4);
+}
+
+.difficulty-btn[data-difficulty="professional"]:hover {
+    border-color: #f39c12;
+    background: linear-gradient(135deg, 
+        rgba(243, 156, 18, 0.2) 0%, 
+        rgba(230, 126, 34, 0.2) 50%, 
+        rgba(243, 156, 18, 0.2) 100%);
+    box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.4),
+        0 0 25px rgba(243, 156, 18, 0.4);
+}
+
+.difficulty-btn[data-difficulty="veteran"]:hover {
+    border-color: #e74c3c;
+    background: linear-gradient(135deg, 
+        rgba(231, 76, 60, 0.2) 0%, 
+        rgba(192, 57, 43, 0.2) 50%, 
+        rgba(231, 76, 60, 0.2) 100%);
+    box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.4),
+        0 0 25px rgba(231, 76, 60, 0.4);
+}
+
+/* Sound Settings Panel */
+.sound-settings-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.sound-settings-panel.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+}
+
+.sound-settings-panel.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+.settings-content {
+    background: linear-gradient(135deg, 
+        rgba(45, 62, 35, 0.95) 0%, 
+        rgba(35, 45, 25, 0.95) 50%, 
+        rgba(25, 35, 20, 0.95) 100%);
+    padding: 30px;
+    border-radius: 15px;
+    border: 3px solid #4a5d23;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.8),
+        0 0 30px rgba(74, 93, 35, 0.3),
+        inset 0 2px 8px rgba(255, 255, 255, 0.1);
+    min-width: 350px;
+    max-width: 90vw;
+    font-family: 'Rajdhani', monospace;
+    color: #00ff41;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #4a5d23;
+    padding-bottom: 15px;
+}
+
+.settings-header h3 {
+    margin: 0;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 1.5em;
+    color: #00ff41;
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+.close-btn {
+    background: none;
+    border: 2px solid #ff4444;
+    color: #ff4444;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background: #ff4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.volume-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.volume-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.volume-group label {
+    font-weight: 600;
+    font-size: 1.1em;
+    color: #00ff41;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.volume-slider {
+    flex: 1;
+    height: 8px;
+    background: linear-gradient(90deg, #2a2a2a 0%, #4a4a4a 100%);
+    border-radius: 5px;
+    outline: none;
+    border: 1px solid #4a5d23;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+    border-radius: 50%;
+    border: 2px solid #4a5d23;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+    transition: all 0.2s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.7);
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+    border-radius: 50%;
+    border: 2px solid #4a5d23;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+    transition: all 0.2s ease;
+}
+
+.volume-value {
+    min-width: 45px;
+    text-align: center;
+    font-weight: 600;
+    color: #00ff41;
+    background: rgba(74, 93, 35, 0.3);
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px solid #4a5d23;
+    font-size: 0.9em;
+}
+
+.master-mute-btn {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ff6b35 100%);
+    border: 2px solid #cc5522;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1em;
+    transition: all 0.2s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.master-mute-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.master-mute-btn.muted {
+    background: linear-gradient(135deg, #666666 0%, #888888 50%, #666666 100%);
+    border-color: #555555;
+    color: #cccccc;
+}
+
+.sound-test {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.test-btn {
+    background: linear-gradient(135deg, #4a5d23 0%, #5d7329 50%, #4a5d23 100%);
+    border: 2px solid #6b8234;
+    color: #00ff41;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.test-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #5d7329 0%, #6b8234 50%, #5d7329 100%);
+}
+
+.sound-info {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #4a5d23;
+}
+
+.sound-info small {
+    color: #888888;
+    font-style: italic;
+}
+
+/* Settings Button in Main UI */
+#sound-settings-button {
+    background: linear-gradient(135deg, #4a5d23 0%, #5d7329 50%, #4a5d23 100%);
+    border: 2px solid #6b8234;
+    color: #00ff41;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 0.9em;
+}
+
+#sound-settings-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #5d7329 0%, #6b8234 50%, #5d7329 100%);
+}
+
+/* Mobile responsiveness for sound settings */
+@media (max-width: 768px) {
+    .settings-content {
+        min-width: 300px;
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .settings-header h3 {
+        font-size: 1.3em;
+    }
+    
+    .close-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+    
+    .volume-group label {
+        font-size: 1em;
+    }
+    
+    .sound-test {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .test-btn {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+}
+
+/* Mobile-Optimized UI Improvements */
+
+/* Show mobile controls only on actual mobile devices */
+/* This works with JavaScript that adds 'mobile-device' class to body */
+body.mobile-device #mobile-controls {
+    display: flex !important;
+}
+
+/* Also show mobile controls on small touch screens */
+@media (max-width: 768px) and (pointer: coarse) {
+    #mobile-controls {
+        display: flex !important;
+    }
+}
+
+/* Force enable mobile controls when testing */
+#mobile-controls.force-enable {
+    display: flex !important;
+}
+
+/* Mobile controls should always be above scope overlay */
+body.scope-active #mobile-controls,
+#mobile-controls.scope-active {
+    z-index: 30000 !important;
+    display: flex !important;
+}
+
+/* Ensure individual mobile control buttons are visible above scope */
+.mobile-control-group {
+    z-index: 30001 !important;
+    position: relative;
+}
+
+.dpad-btn, .action-btn, .power-btn {
+    z-index: 30002 !important;
+    position: relative;
+}
+
+/* Mobile Responsive Design - More Aggressive Optimization */
+@media (max-width: 768px) {
+    body {
+        overflow: hidden; /* Prevent any scrolling on mobile */
+    }
+    .profileContainer {
+        display: none; /* Hide profile container on mobile */
+    }
+    
+    /* Much more compact UI container */
+    #ui-container {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: none;
+        padding: 6px 10px;
+        font-size: 11px;
+        background: rgba(25, 35, 20, 0.85);
+        border-radius: 8px;
+        border: 1px solid #4a5d23;
+        min-width: auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(3px);
+        z-index: 1001;
+    }
+    
+    /* Remove the command center header on mobile for space */
+    #ui-container::before {
+        display: none;
+    }
+    
+    /* Compact info display - horizontal layout */
+    #ui-container p {
+        margin: 0;
+        padding: 2px 6px;
+        font-size: 10px;
+        line-height: 1.2;
+        background: rgba(0, 0, 0, 0.3);
+        border-left: 2px solid #4a5d23;
+        border-radius: 3px;
+        white-space: nowrap;
+        flex: 0 0 auto;
+    }
+    
+    /* Make turn indicator more prominent but compact */
+    #turn-indicator {
+        font-weight: bold;
+        color: #ffd700 !important;
+        border-left-color: #ffd700 !important;
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+    
+    /* Compact button container */
+    .button-container {
+        flex-direction: row;
+        gap: 6px;
+        margin-top: 0;
+        flex: 0 0 auto;
+    }
+    
+    #ui-container button {
+        padding: 4px 8px;
+        font-size: 9px;
+        margin-top: 0;
+        border-radius: 4px;
+        letter-spacing: 0.3px;
+        min-height: 28px;
+        min-width: 60px;
+        white-space: nowrap;
+    }
+    
+    /* Hide non-essential mobile elements */
+    .mobile-hidden {
+        display: none !important;
+    }
+    
+    /* Completely hide controls info on mobile or make it much smaller */
+    #controls-info {
+        position: fixed;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 4px 8px;
+        font-size: 8px;
+        max-width: 200px;
+        background: rgba(25, 35, 20, 0.7);
+        border-radius: 6px;
+        border: 1px solid #4a5d23;
+        text-align: center;
+        z-index: 1000;
+    }
+    
+    /* Hide desktop controls completely on mobile */
+    .controls-desktop {
+        display: none !important;
+    }
+
+    /* Simplified mobile controls text */
+    .controls-mobile p {
+        margin: 1px 0;
+        line-height: 1.1;
+        font-size: 8px;
+    }    
+
+
+    /* Gaming-Style Mobile Controls */
+    #mobile-controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 180px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 15px 20px 20px 20px;
+        box-sizing: border-box;
+        pointer-events: auto;
+        z-index: 0;
+    }
+
+    /* Movement D-Pad Controls */
+    #movement-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .dpad-container {
+        display: grid;
+        grid-template-areas:
+            ". up ."
+            "left center right"
+            ". down .";
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+        gap: 4px;
+        width: 120px;
+        height: 120px;
+    }
+
+    .dpad-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 2px solid #4a5d23;
+        background: linear-gradient(135deg, 
+            rgba(74, 93, 35, 0.8) 0%, 
+            rgba(74, 93, 35, 0.9) 50%, 
+            rgba(45, 62, 35, 0.9) 100%);
+        color: #00ff41;
+        font-size: 16px;
+        font-weight: bold;
+        font-family: 'Rajdhani', monospace;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        pointer-events: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 
+            0 3px 6px rgba(0, 0, 0, 0.3),
+            0 0 12px rgba(74, 93, 35, 0.4),
+            inset 0 1px 3px rgba(255, 255, 255, 0.1);
+        text-shadow: 0 0 4px rgba(0, 255, 65, 0.5);
+        transition: all 0.1s ease;
+        backdrop-filter: blur(2px);
+    }
+
+    #move-up-btn { grid-area: up; }
+    #rotate-left-btn { grid-area: left; }
+    #rotate-right-btn { grid-area: right; }
+    #move-down-btn { grid-area: down; }
+
+    .dpad-horizontal {
+        grid-area: left / left / right / right;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+    }
+
+    .dpad-center {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: radial-gradient(circle, 
+            rgba(74, 93, 35, 0.3) 0%, 
+            rgba(74, 93, 35, 0.6) 100%);
+        border: 2px solid #4a5d23;
+        opacity: 0.5;
+    }
+
+    /* Action Controls D-Pad */
+    #action-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .action-dpad {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        width: 140px;
+    }
+
+    .action-horizontal {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .action-bottom {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .power-controls {
+        display: flex;
+        gap: 6px;
+    }
+
+    .action-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 2px solid #4a5d23;
+        background: linear-gradient(135deg, 
+            rgba(74, 93, 35, 0.8) 0%, 
+            rgba(74, 93, 35, 0.9) 50%, 
+            rgba(45, 62, 35, 0.9) 100%);
+        color: #00ff41;
+        font-size: 14px;
+        font-weight: bold;
+        font-family: 'Rajdhani', monospace;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        pointer-events: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 
+            0 3px 6px rgba(0, 0, 0, 0.3),
+            0 0 12px rgba(74, 93, 35, 0.4),
+            inset 0 1px 3px rgba(255, 255, 255, 0.1);
+        text-shadow: 0 0 4px rgba(0, 255, 65, 0.5);
+        transition: all 0.1s ease;
+        backdrop-filter: blur(2px);
+    }
+
+    .power-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 2px solid #4a5d23;
+        background: linear-gradient(135deg, 
+            rgba(74, 93, 35, 0.8) 0%, 
+            rgba(74, 93, 35, 0.9) 50%, 
+            rgba(45, 62, 35, 0.9) 100%);
+        color: #00ff41;
+        font-size: 16px;
+        font-weight: bold;
+        font-family: 'Rajdhani', monospace;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        pointer-events: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.3),
+            0 0 8px rgba(74, 93, 35, 0.4),
+            inset 0 1px 2px rgba(255, 255, 255, 0.1);
+        text-shadow: 0 0 3px rgba(0, 255, 65, 0.5);
+        transition: all 0.1s ease;
+    }
+
+    /* Fire button - prominent styling */
+    .fire-btn {
+        width: 50px !important;
+        height: 50px !important;
+        background: linear-gradient(135deg, 
+            rgba(231, 76, 60, 0.8) 0%, 
+            rgba(192, 57, 43, 0.9) 50%, 
+            rgba(155, 45, 35, 0.9) 100%) !important;
+        border-color: #c0392b !important;
+        box-shadow: 
+            0 4px 8px rgba(0, 0, 0, 0.3),
+            0 0 15px rgba(231, 76, 60, 0.5),
+            inset 0 2px 4px rgba(255, 255, 255, 0.1) !important;
+        font-size: 16px !important;
+    }
+
+    /* Scope button - distinctive styling */
+    .scope-btn {
+        background: linear-gradient(135deg, 
+            rgba(52, 152, 219, 0.8) 0%, 
+            rgba(41, 128, 185, 0.9) 50%, 
+            rgba(30, 100, 150, 0.9) 100%) !important;
+        border-color: #2980b9 !important;
+        box-shadow: 
+            0 3px 6px rgba(0, 0, 0, 0.3),
+            0 0 12px rgba(52, 152, 219, 0.4),
+            inset 0 1px 3px rgba(255, 255, 255, 0.1) !important;
+        font-size: 16px !important;
+        text-shadow: 0 0 4px rgba(52, 152, 219, 0.7) !important;
+    }
+
+    .scope-btn:active {
+        transform: scale(0.95) !important;
+        box-shadow: 
+            0 1px 3px rgba(0, 0, 0, 0.3),
+            0 0 8px rgba(52, 152, 219, 0.3),
+            inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* Button active states */
+    .dpad-btn:active, .action-btn:active, .power-btn:active {
+        transform: scale(0.95);
+        box-shadow: 
+            0 1px 3px rgba(0, 0, 0, 0.3),
+            0 0 8px rgba(74, 93, 35, 0.3),
+            inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .fire-btn:active {
+        transform: scale(0.95) !important;
+        box-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.3),
+            0 0 10px rgba(231, 76, 60, 0.4),
+            inset 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* Labels */
+    .movement-label, .action-label {
+        color: #00ff41;
+        font-size: 10px;
+        font-weight: bold;
+        font-family: 'Rajdhani', monospace;
+        text-shadow: 0 0 3px rgba(0, 255, 65, 0.5);
+        text-align: center;
+        user-select: none;    }
+    
+    /* More compact login screen */
+    .login-content {
+        padding: 12px 16px;
+        margin: 5px;
+        max-width: 95vw;
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+    
+    .login-content h1 {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+    
+    .login-content .subtitle {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .startupImage {
+        width: 25%;
+        max-width: 150px;
+    }
+    
+    /* Compact difficulty selector */
+    .difficulty-content {
+        padding: 12px;
+        margin: 5px;
+        max-width: 95vw;
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+    
+    .difficulty-content h2 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+    
+    .difficulty-options {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .difficulty-btn {
+        min-height: auto;
+        padding: 12px;
+        width: 100%;
+    }
+    
+    .difficulty-btn h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .difficulty-btn p {
+        font-size: 12px;
+        margin: 4px 0;
+    }
+
+    /* Mobile-optimized settings button */
+    .settings-btn {
+        top: 65px !important;
+        right: 10px !important;
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 30px !important;
+        z-index: 1600 !important;
+    }
+
+    /* Make message overlay more mobile-friendly */
+    #message-overlay {
+        padding: 20px 25px;
+        font-size: 20px;
+        max-width: 90vw;
+        word-wrap: break-word;
+    }
+    
+    #message-overlay::before {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+    
+    /* Optimize canvas for mobile */
+    canvas {
+        width: 100vw !important;
+        height: 100vh !important;
+        touch-action: pan-x pan-y;
+        display: block;
+    }
+    
+    /* Ensure proper touch targets */
+    .mobile-btn, button {
+        min-width: 42px;
+        min-height: 42px;
+    }
+    
+    /* Hide any overflow */
+    html, body {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    #mobile-controls {
+        height: 140px; /* Even smaller in landscape */
+        padding: 10px 15px 15px 15px;
+    }
+    
+    #ui-container {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+    
+    #ui-container p {
+        font-size: 9px;
+    }
+    
+    #controls-info {
+        font-size: 7px;
+        padding: 3px 6px;
+        max-width: 150px;    }
+    
+    /* Even smaller controls in landscape */
+    .dpad-container {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .dpad-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+    
+    .dpad-center {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 12px;
+    }
+    
+    .power-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+    
+    .fire-btn {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* Ultra-compact for very small screens */
+@media (max-width: 480px) {
+    #ui-container {
+        font-size: 9px;
+        padding: 3px 6px;
+        gap: 4px;
+    }
+    
+    #ui-container p {
+        font-size: 8px;
+        padding: 1px 4px;
+    }
+    
+    #ui-container button {
+        padding: 3px 6px;
+        font-size: 8px;
+        min-height: 24px;
+        min-width: 50px;    }
+    
+    #mobile-controls {
+        height: 160px;
+        padding: 10px 15px 15px 15px;
+    }
+    
+    .dpad-container {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .dpad-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .dpad-center {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .action-dpad {
+        width: 120px;
+    }
+    
+    .action-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 11px;
+    }
+    
+    .power-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
+    }
+    
+    .fire-btn {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 13px !important;
+    }
+}
+
+/* Portrait mobile specific adjustments */
+@media (max-width: 768px) and (orientation: portrait) {
+    #ui-container {
+        top: 15px;
+        left: 10px;
+        right: 10px;
+    }
+    
+    /* Slightly larger controls in portrait since we have more vertical space */
+    #mobile-controls {
+        height: 200px;
+        padding: 20px 25px 25px 25px;
+    }
+    
+    .dpad-container {
+        width: 110px;
+        height: 110px;
+    }
+    
+    .dpad-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
+    }
+    
+    .dpad-center {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .action-dpad {
+        width: 130px;
+    }
+    
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 13px;
+    }
+    
+    .power-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+    
+    .fire-btn {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 15px !important;
+    }
+}
+
+/* Mobile-optimized volume slider improvements */
+@media (max-width: 768px) and (pointer: coarse) {
+    .volume-slider {
+        height: 12px !important;
+        touch-action: manipulation;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    
+    .volume-slider::-webkit-slider-thumb {
+        width: 28px !important;
+        height: 28px !important;
+        -webkit-appearance: none;
+        appearance: none;
+        background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+        border-radius: 50%;
+        border: 3px solid #4a5d23;
+        cursor: pointer;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
+        transition: all 0.2s ease;
+        position: relative;
+        z-index: 1000;
+    }
+    
+    .volume-slider::-moz-range-thumb {
+        width: 28px !important;
+        height: 28px !important;
+        background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+        border-radius: 50%;
+        border: 3px solid #4a5d23;
+        cursor: pointer;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
+        transition: all 0.2s ease;
+    }
+    
+    .slider-container {
+        padding: 10px 5px;
+        touch-action: manipulation;
+    }
+    
+    .volume-group {
+        margin: 15px 0;
+    }
+}
+
+/*# sourceMappingURL=styles.css.map */
