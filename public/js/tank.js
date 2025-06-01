@@ -30,7 +30,7 @@ export class Tank {
         this.turretRotateSpeed = Math.PI / 6; 
 
         this.hasFiredThisTurn = false;
-        this.collisionRadius = 0.90; // For collision detection
+        this.collisionRadius = 1; // For collision detection
         
         // Gravity physics for tank spawning
         this.gravity = 9.81 * 1.5; // Moderate gravity for tanks (less than projectiles)

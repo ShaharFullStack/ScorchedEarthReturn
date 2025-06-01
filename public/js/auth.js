@@ -361,11 +361,10 @@ export class AuthManager {
     this.profileContainer = document.createElement('div');
     this.profileContainer.id = 'profileContainer';
     this.profileContainer.style.position = 'fixed';
-    this.profileContainer.style.right = '100px';
-    this.profileContainer.style.top = '20px';
-    this.profileContainer.style.backgroundColor = 'rgb(47, 58, 40)';
+    this.profileContainer.style.top = '65px';
+    this.profileContainer.style.left = '10px';
+    this.profileContainer.style.backgroundColor = 'rgba(30, 30, 30, 0.8)';
     this.profileContainer.style.borderRadius = '40px';
-    this.profileContainer.style.border = '2px solid #4A5D23';
     this.profileContainer.style.padding = '5px';
     this.profileContainer.style.display = 'flex';
     this.profileContainer.style.alignItems = 'center';
@@ -380,8 +379,8 @@ export class AuthManager {
     // Create the profile avatar
     this.profileAvatar = document.createElement('img');
     this.profileAvatar.className = 'profile-avatar';
-    this.profileAvatar.style.width = '20px';
-    this.profileAvatar.style.height = '20px';
+    this.profileAvatar.style.width = '30px';
+    this.profileAvatar.style.height = '30px';
     this.profileAvatar.style.borderRadius = '50%';
     this.profileAvatar.style.objectFit = 'cover';
     this.profileAvatar.style.border = '2px solid #4285F4';

@@ -586,7 +586,7 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 150000;
     font-family: 'Orbitron', monospace;
     backdrop-filter: blur(3px);
 }
@@ -738,7 +738,7 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 3000;
+    z-index: 50000;
     backdrop-filter: blur(5px);
     transition: all 0.3s ease;
 }
@@ -1050,7 +1050,7 @@ body.scope-active #mobile-controls,
         overflow: hidden; /* Prevent any scrolling on mobile */
     }
     .profileContainer {
-        display: none; /* Hide profile container on mobile */
+        top: 70px;
     }
     
     /* Much more compact UI container */
