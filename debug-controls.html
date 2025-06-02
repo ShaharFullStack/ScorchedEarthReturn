@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Game - Debug Controls</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+        }
+        .debug-panel {
+            background: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .success {
+            background: #27ae60;
+        }
+        .warning {
+            background: #f39c12;
+        }
+        .info {
+            background: #34495e;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Tank Game Debug Controls</h1>
+    
+    <div class="debug-panel">
+        <h3>Mobile Controls</h3>
+        <button onclick="forceMobileControls()">Force Enable Mobile Controls</button>
+        <button onclick="disableMobileControls()">Disable Mobile Controls</button>
+        <button onclick="checkMobileStatus()">Check Mobile Status</button>
+        <div id="mobile-status" class="info">Status: Checking...</div>
+    </div>
+
+    <div class="debug-panel">
+        <h3>Firebase/Backend</h3>
+        <button onclick="testFirebase()">Test Firebase Connection</button>
+        <button onclick="clearUserData()">Clear Local Data</button>
+        <button onclick="showUserData()">Show Stored Data</button>
+        <div id="firebase-status" class="info">Status: Not tested</div>
+    </div>
+
+    <div class="debug-panel">
+        <h3>Quick Actions</h3>
+        <button onclick="openGame()" class="success">Open Game</button>
+        <button onclick="openGameMobile()" class="warning">Open Game (Force Mobile)</button>
+    </div>
+
+    <script>
+        function forceMobileControls() {
+            localStorage.setItem('forceMobileControls', 'true');
+            updateMobileStatus();
+            alert('Mobile controls enabled! Refresh the game to see changes.');
+        }
+
+        function disableMobileControls() {
+            localStorage.removeItem('forceMobileControls');
+            updateMobileStatus();
+            alert('Mobile controls disabled! Refresh the game to see changes.');
+        }
+
+        function checkMobileStatus() {
+            updateMobileStatus();
+        }
+
+        function updateMobileStatus() {
+            const forced = localStorage.getItem('forceMobileControls') === 'true';
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const hasTouch = 'ontouchstart' in window;
+            const isSmall = window.innerWidth <= 768;
+            
+            const status = document.getElementById('mobile-status');
+            status.innerHTML = `
+                <strong>Mobile Detection:</strong><br>
+                • Force Enabled: ${forced ? '✅' : '❌'}<br>
+                • Mobile UA: ${isMobile ? '✅' : '❌'}<br>
+                • Touch Support: ${hasTouch ? '✅' : '❌'}<br>
+                • Small Screen: ${isSmall ? '✅' : '❌'}<br>
+                • Window Size: ${window.innerWidth}x${window.innerHeight}
+            `;
+        }
+
+        function testFirebase() {
+            const status = document.getElementById('firebase-status');
+            status.innerHTML = 'Testing Firebase connection...';
+            
+            // Simple test - try to access firebase
+            try {
+                const hasFirebase = typeof firebase !== 'undefined';
+                status.innerHTML = `Firebase Available: ${hasFirebase ? '✅' : '❌'}<br>
+                Fallback to localStorage: ${!hasFirebase ? '✅' : 'Not needed'}`;
+            } catch (error) {
+                status.innerHTML = `Firebase Error: ❌<br>Using localStorage fallback: ✅`;
+            }
+        }
+
+        function clearUserData() {
+            localStorage.removeItem('tankGame_userData');
+            localStorage.removeItem('forceMobileControls');
+            alert('Local user data cleared!');
+            updateMobileStatus();
+        }
+
+        function showUserData() {
+            const userData = localStorage.getItem('tankGame_userData');
+            const mobileForced = localStorage.getItem('forceMobileControls');
+            
+            alert(`User Data: ${userData || 'None'}\nMobile Forced: ${mobileForced || 'false'}`);
+        }
+
+        function openGame() {
+            window.open('./public/index.html', '_blank');
+        }
+
+        function openGameMobile() {
+            localStorage.setItem('forceMobileControls', 'true');
+            window.open('./public/index.html', '_blank');
+        }
+
+        // Initialize
+        updateMobileStatus();
+    </script>
+</body>
+</html>
