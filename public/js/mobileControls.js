@@ -129,12 +129,9 @@ export class MobileControls {
 
         // Power controls
         this.setupButton('power-up-btn', 'powerUp');
-        this.setupButton('power-down-btn', 'powerDown');
-
-        // Fire button
+        this.setupButton('power-down-btn', 'powerDown');        // Fire button
         this.setupButton('fire-btn', 'fire');
-        
-        // Scope button - special handling for toggle
+          // Scope button - special handling for toggle
         this.setupScopeButton('scope-btn');
     }
     setupButton(buttonId, actionName) {
@@ -475,35 +472,9 @@ export class MobileControls {
             margin: -2px 0 0 -15px;
             background: rgba(0, 255, 65, 0.9);
             box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8);
-        `;
-
-        mobileCrosshair.appendChild(verticalLine);
+        `;        mobileCrosshair.appendChild(verticalLine);
         mobileCrosshair.appendChild(horizontalLine);
         this.scopeState.overlay.appendChild(mobileCrosshair);
-
-        // Create mobile scope info panel
-        const scopeInfo = document.createElement('div');
-        scopeInfo.style.cssText = `
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(0, 255, 65, 0.7);
-            border-radius: 10px;
-            padding: 15px 20px;
-            color: rgba(0, 255, 65, 0.9);
-            font-family: 'Orbitron', 'Arial', sans-serif;
-            font-size: 16px;
-            text-align: center;
-            text-shadow: 0 0 5px rgba(0, 255, 65, 0.7);
-            pointer-events: none;
-        `;
-        scopeInfo.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 8px;">🔭 SCOPE VIEW</div>
-            <div style="font-size: 14px; opacity: 0.8;">Touch & drag to aim</div>
-        `;
-        this.scopeState.overlay.appendChild(scopeInfo);
 
         // Create mobile exit scope button
         this.scopeState.exitButton = document.createElement('button');
@@ -680,5 +651,210 @@ export class MobileControls {
         }
         
         console.log('Mobile scope exited');
+    }
+
+    setupSettingsButton(buttonId) {
+        const button = document.getElementById(buttonId);
+        if (!button) {
+            console.error(`Settings button not found: ${buttonId}`);
+            return;
+        }
+
+        console.log(`Setting up settings button: ${buttonId}`);
+        
+        // Handle settings toggle on tap/click
+        const handleSettingsToggle = (e) => {
+            e.preventDefault();
+            console.log('Settings button pressed');
+            
+            // Play button press sound
+            if (this.game.audioManager) {
+                this.game.audioManager.playSound('click', 0.1);
+            }
+            
+            // Toggle settings menu
+            this.toggleSettingsMenu();
+        };
+
+        // Touch events
+        button.addEventListener('touchstart', handleSettingsToggle);
+        
+        // Mouse events for desktop testing
+        button.addEventListener('click', handleSettingsToggle);
+    }
+
+    /**
+     * Toggle the settings menu visibility
+     */
+    toggleSettingsMenu() {
+        console.log('Toggling settings menu...');
+        
+        // Check if settings menu exists, if not create it
+        let settingsMenu = document.getElementById('mobile-settings-menu');
+        
+        if (!settingsMenu) {
+            this.createSettingsMenu();
+            settingsMenu = document.getElementById('mobile-settings-menu');
+        }
+        
+        // Toggle visibility
+        if (settingsMenu.style.display === 'none' || !settingsMenu.style.display) {
+            settingsMenu.style.display = 'block';
+            console.log('Settings menu opened');
+        } else {
+            settingsMenu.style.display = 'none';
+            console.log('Settings menu closed');
+        }
+    }
+
+    /**
+     * Create the mobile settings menu overlay
+     */
+    createSettingsMenu() {
+        console.log('Creating mobile settings menu...');
+        
+        // Create settings menu overlay
+        const settingsMenu = document.createElement('div');
+        settingsMenu.id = 'mobile-settings-menu';
+        settingsMenu.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            max-width: 90vw;
+            background: linear-gradient(135deg, rgba(35, 45, 25, 0.95), rgba(25, 35, 20, 0.9));
+            border: 3px solid #4a5d23;
+            border-radius: 15px;
+            padding: 20px;
+            z-index: 30000;
+            display: none;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.8),
+                0 0 20px rgba(74, 93, 35, 0.4),
+                inset 0 2px 8px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: #00ff41;
+            font-family: 'Rajdhani', monospace;
+        `;
+
+        // Settings header
+        const header = document.createElement('div');
+        header.style.cssText = `
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #00ff41;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+        `;
+        header.innerHTML = '⚙️ SETTINGS';
+        settingsMenu.appendChild(header);
+
+        // Audio settings section
+        const audioSection = document.createElement('div');
+        audioSection.style.cssText = `margin-bottom: 15px;`;
+        audioSection.innerHTML = `
+            <div style="margin-bottom: 10px; font-weight: bold;">Audio Settings:</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span>Master Volume:</span>
+                <input type="range" id="master-volume" min="0" max="100" value="50" style="width: 120px;">
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span>SFX Volume:</span>
+                <input type="range" id="sfx-volume" min="0" max="100" value="50" style="width: 120px;">
+            </div>
+        `;
+        settingsMenu.appendChild(audioSection);
+
+        // Controls settings section
+        const controlsSection = document.createElement('div');
+        controlsSection.style.cssText = `margin-bottom: 15px;`;
+        controlsSection.innerHTML = `
+            <div style="margin-bottom: 10px; font-weight: bold;">Controls:</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span>Touch Sensitivity:</span>
+                <input type="range" id="touch-sensitivity" min="0.001" max="0.005" step="0.001" value="0.002" style="width: 120px;">
+            </div>
+        `;
+        settingsMenu.appendChild(controlsSection);
+
+        // Close button
+        const closeButton = document.createElement('button');
+        closeButton.style.cssText = `
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(185, 43, 58, 0.9));
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Rajdhani', monospace;
+        `;
+        closeButton.innerHTML = 'CLOSE';
+        closeButton.addEventListener('click', () => {
+            settingsMenu.style.display = 'none';
+            
+            // Play button press sound
+            if (this.game.audioManager) {
+                this.game.audioManager.playSound('click', 0.1);
+            }
+        });
+        closeButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            settingsMenu.style.display = 'none';
+            
+            // Play button press sound
+            if (this.game.audioManager) {
+                this.game.audioManager.playSound('click', 0.1);
+            }
+        });
+        settingsMenu.appendChild(closeButton);
+
+        // Add event listeners for settings changes
+        this.setupSettingsEventListeners(settingsMenu);
+
+        document.body.appendChild(settingsMenu);
+        console.log('Mobile settings menu created');
+    }
+
+    /**
+     * Setup event listeners for settings controls
+     */
+    setupSettingsEventListeners(settingsMenu) {
+        // Touch sensitivity control
+        const touchSensitivity = settingsMenu.querySelector('#touch-sensitivity');
+        if (touchSensitivity) {
+            touchSensitivity.addEventListener('input', (e) => {
+                this.scopeState.sensitivity = parseFloat(e.target.value);
+                console.log('Touch sensitivity updated:', this.scopeState.sensitivity);
+            });
+        }
+
+        // Master volume control
+        const masterVolume = settingsMenu.querySelector('#master-volume');
+        if (masterVolume) {
+            masterVolume.addEventListener('input', (e) => {
+                const volume = parseInt(e.target.value) / 100;
+                if (this.game.audioManager) {
+                    this.game.audioManager.setMasterVolume(volume);
+                    console.log('Master volume updated:', volume);
+                }
+            });
+        }
+
+        // SFX volume control
+        const sfxVolume = settingsMenu.querySelector('#sfx-volume');
+        if (sfxVolume) {
+            sfxVolume.addEventListener('input', (e) => {
+                const volume = parseInt(e.target.value) / 100;
+                if (this.game.audioManager) {
+                    this.game.audioManager.setSfxVolume(volume);
+                    console.log('SFX volume updated:', volume);
+                }            });
+        }
     }
 }

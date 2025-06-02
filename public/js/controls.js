@@ -372,7 +372,7 @@ class BarrelScopeCameraController {
   }
 
   createScopeOverlay() {
-    // Create scope overlay container
+    // Create scope overlay with green tint and circular scope view
     this.scopeOverlay = document.createElement('div');
     this.scopeOverlay.id = 'scope-overlay';
     this.scopeOverlay.style.cssText = `
@@ -384,10 +384,26 @@ class BarrelScopeCameraController {
       pointer-events: none;
       z-index: 1000;
       display: none;
-      background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.9) 22%);
+      background: radial-gradient(circle at center, rgba(0, 255, 0, 0.5) 55%, rgba(0, 0, 0, 0.95) 22%);
     `;
 
-    // Create crosshair
+    // Create circular scope boundary
+    const scopeCircle = document.createElement('div');
+    scopeCircle.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40vmin;
+      height: 40vmin;
+      margin: -20vmin 0 0 -20vmin;
+      border: 2px solid rgba(0, 255, 0, 0.8);
+      border-radius: 50%;
+      box-shadow: 
+        0 0 0 2px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(0, 255, 0, 0.3);
+    `;
+
+    // Create simple crosshair
     this.crosshair = document.createElement('div');
     this.crosshair.style.cssText = `
       position: absolute;
@@ -396,58 +412,100 @@ class BarrelScopeCameraController {
       width: 40px;
       height: 40px;
       margin: -20px 0 0 -20px;
-      border: 2px solid rgba(255, 255, 255, 0.8);
-      border-radius: 50%;
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
     `;
 
-    // Add crosshair lines
+    // Vertical line
     const verticalLine = document.createElement('div');
     verticalLine.style.cssText = `
       position: absolute;
       top: 50%;
       left: 50%;
       width: 2px;
-      height: 20px;
-      margin: -10px 0 0 -1px;
-      background: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+      height: 40px;
+      margin: -20px 0 0 -1px;
+      background: rgba(0, 11, 0, 0.8);
     `;
 
-    const horizontalLine = document.createElement('div');
-    horizontalLine.style.cssText = `
+    // Horizontal line  
+    const horizontalLine1 = document.createElement('div');
+    horizontalLine1.style.cssText = `
+      position: absolute;
+      top: -150%;
+      left: 50%;
+      width: 40px;
+      height: 2px;
+      margin: -1px 0 0 -20px;
+      background: rgba(0, 11, 0, 0.8);
+    `;
+    // Horizontal line  
+    const horizontalLine2 = document.createElement('div');
+    horizontalLine2.style.cssText = `
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 20px;
+      width: 40px;
       height: 2px;
-      margin: -1px 0 0 -10px;
-      background: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+      margin: -1px 0 0 -20px;
+      background: rgba(0, 11, 0, 0.8);
+    `;
+    const horizontalLine3 = document.createElement('div');
+    horizontalLine3.style.cssText = `
+      position: absolute;
+      top: 150%;
+      left: 50%;
+      width: 40px;
+      height: 2px;
+      margin: -1px 0 0 -20px;
+      background: rgba(0, 11, 0, 0.8);
+    `;
+    const horizontalLine4 = document.createElement('div');
+    horizontalLine4.style.cssText = `
+      position: absolute;
+      top: 460%;
+      left: 50%;
+      width: 40px;
+      height: 2px;
+      margin: -1px 0 0 -20px;
+      background: rgba(0, 11, 0, 0.8);
+    `;
+    const horizontalLine5 = document.createElement('div');
+    horizontalLine5.style.cssText = `
+      position: absolute;
+      top: 800%;
+      left: 50%;
+      width: 40px;
+      height: 2px;
+      margin: -1px 0 0 -20px;
+      background: rgba(0, 11, 0, 0.8);
     `;
 
-    this.crosshair.appendChild(verticalLine);
-    this.crosshair.appendChild(horizontalLine);
-    this.scopeOverlay.appendChild(this.crosshair);
-
-    // Add range indicators
-    const rangeInfo = document.createElement('div');
-    rangeInfo.style.cssText = `
+    // Distance meter
+    const distanceDisplay = document.createElement('div');
+    distanceDisplay.id = 'distance-meter';
+    distanceDisplay.style.cssText = `
       position: absolute;
-      bottom: 20px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(0, 255, 0, 0.9);
       font-family: 'Courier New', monospace;
-      font-size: 14px;
+      font-size: 16px;
       text-align: center;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 5px 10px;
+      border-radius: 3px;
     `;
-    rangeInfo.innerHTML = `
-      <div>SCOPE VIEW</div>
-      <div style="font-size: 12px; margin-top: 5px;">Mouse: Aim | Right-click: Exit</div>
-    `;
-    this.scopeOverlay.appendChild(rangeInfo);
+    distanceDisplay.textContent = 'DISTANCE: ⚠️SYSTEM MALFUNCTION⚠️';
+
+    this.crosshair.appendChild(verticalLine);
+    this.crosshair.appendChild(horizontalLine1);
+    this.crosshair.appendChild(horizontalLine2);
+    this.crosshair.appendChild(horizontalLine3);
+    this.crosshair.appendChild(horizontalLine4);
+    this.crosshair.appendChild(horizontalLine5);
+    this.scopeOverlay.appendChild(scopeCircle);
+    this.scopeOverlay.appendChild(this.crosshair);
+    this.scopeOverlay.appendChild(distanceDisplay);
 
     document.body.appendChild(this.scopeOverlay);
   }
@@ -471,7 +529,7 @@ class BarrelScopeCameraController {
     // Hide tank model parts that might obstruct view
     this.hideTankParts();
 
-    console.log('Barrel scope camera enabled');
+    console.log('Barrel scope camera enabled - barrel visibility:', this.tank.barrel ? this.tank.barrel.visible : 'barrel not found');
   }
 
   disable() {
@@ -493,38 +551,72 @@ class BarrelScopeCameraController {
       document.exitPointerLock();
     }
 
-    console.log('Barrel scope camera disabled');
+    console.log('Barrel scope camera disabled - barrel visibility:', this.tank.barrel ? this.tank.barrel.visible : 'barrel not found');
   }
 
   hideTankParts() {
     // Store original visibility and hide parts that might obstruct the view
     this.originalVisibility = [];
     
-    // Hide the barrel itself and turret parts that might be visible
-    const partsToHide = [this.tank.barrel, this.tank.turretGroup];
+    console.log('Hiding tank parts for scope view...');
     
-    partsToHide.forEach(part => {
-      if (part) {
-        part.traverse(child => {
-          if (child.isMesh) {
-            this.originalVisibility.push({
-              object: child,
-              visible: child.visible
-            });
-            child.visible = false;
-          }
-        });
-      }
-    });
+    // Only hide the main barrel mesh itself, not the entire turret group
+    // This prevents the barrel from appearing in scope view but keeps turret structure intact
+    if (this.tank.barrel) {
+      this.originalVisibility.push({
+        object: this.tank.barrel,
+        visible: this.tank.barrel.visible
+      });
+      this.tank.barrel.visible = false;
+      console.log('Hidden main barrel, original visibility:', this.tank.barrel.visible);
+      
+      // Also hide any direct children of the barrel that might obstruct view
+      this.tank.barrel.children.forEach(child => {
+        if (child.isMesh) {
+          this.originalVisibility.push({
+            object: child,
+            visible: child.visible
+          });
+          child.visible = false;
+          console.log('Hidden barrel child mesh');
+        }
+      });
+    }
+    
+    // Hide muzzle brake and mantlet that are in the barrel group
+    if (this.tank.barrelGroup) {
+      this.tank.barrelGroup.children.forEach(child => {
+        if (child.isMesh && child !== this.tank.barrel) {
+          this.originalVisibility.push({
+            object: child,
+            visible: child.visible
+          });
+          child.visible = false;
+          console.log('Hidden barrel group child mesh');
+        }
+      });
+    }
+    
+    console.log('Total objects hidden:', this.originalVisibility.length);
   }
 
   showTankParts() {
     // Restore original visibility
-    if (this.originalVisibility) {
-      this.originalVisibility.forEach(item => {
-        item.object.visible = item.visible;
+    console.log('Restoring tank parts visibility...');
+    
+    if (this.originalVisibility && this.originalVisibility.length > 0) {
+      this.originalVisibility.forEach((item, index) => {
+        if (item.object && typeof item.visible === 'boolean') {
+          item.object.visible = item.visible;
+          console.log(`Restored object ${index + 1}/${this.originalVisibility.length} to visibility:`, item.visible);
+        } else {
+          console.warn(`Invalid visibility item at index ${index}:`, item);
+        }
       });
-      this.originalVisibility = null;
+      this.originalVisibility = [];
+      console.log('Tank parts visibility restored');
+    } else {
+      console.warn('No visibility data to restore or empty array');
     }
   }  update() {
     if (!this.enabled) return 0;

@@ -35,7 +35,7 @@ export class Projectile {
         this.lifespan = 8; // Increased for longer range shots
         this.age = 0;
         this.shouldBeRemoved = false;
-        this.damage = 35;
+        this.damage = 55;
         this.collisionRadius = 0.35;        
         // Enhanced trajectory tracking
         this.startPosition = startPosition.clone();

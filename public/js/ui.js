@@ -11,6 +11,11 @@ export class UI {
         this.endTurnButton = document.getElementById('end-turn-button');
         this.messageOverlay = document.getElementById('message-overlay');
 
+        // References to profile UI elements
+        this.profileAvatar = document.getElementById('profile-avatar');
+        this.profileName = document.getElementById('profile-name');
+        this.turnStatusLight = document.getElementById('turn-status-light');
+
         this.playerName = '';
 
         this.setupDifficultySelector();
@@ -32,22 +37,22 @@ export class UI {
             <div class="difficulty-content">
                 <h2>Select Difficulty Level</h2>
                 <div class="difficulty-options">
-                    <button class="difficulty-btn" data-difficulty="beginner">
-                        <h3>🟢 New Player</h3>
+                    <button class="difficulty-btn" data-difficulty="sargent">
+                        <h3>🟢 Sargent</h3>
                         <p>• Slower enemy reactions</p>
                         <p>• Less accurate shooting</p>
                         <p>• More forgiving mechanics</p>
                         <p>• Perfect for learning!</p>
                     </button>
-                    <button class="difficulty-btn" data-difficulty="professional">
-                        <h3>🟡 Professional</h3>
+                    <button class="difficulty-btn" data-difficulty="lieutenant">
+                        <h3>🟡 Lieutenant</h3>
                         <p>• Balanced challenge</p>
                         <p>• Smart enemy tactics</p>
                         <p>• Strategic positioning</p>
                         <p>• Standard experience</p>
                     </button>
-                    <button class="difficulty-btn" data-difficulty="veteran">
-                        <h3>🔴 Veteran</h3>
+                    <button class="difficulty-btn" data-difficulty="colonel">
+                        <h3>🔴 Colonel</h3>
                         <p>• Lightning-fast AI</p>
                         <p>• Deadly accurate shots</p>
                         <p>• Advanced battle tactics</p>
@@ -97,7 +102,8 @@ export class UI {
     showDifficultySelector() {
         this.difficultyOverlay.style.display = 'flex';
         this.difficultyOverlay.style.transform = 'scale(1)';
-        this.difficultyOverlay.style.opacity = '1';        this.difficultyOverlay.style.transition = 'all 0.5s ease';
+        this.difficultyOverlay.style.opacity = '1';        
+        this.difficultyOverlay.style.transition = 'all 0.5s ease';
     }
 
     setupSoundSettings() {
@@ -125,7 +131,24 @@ export class UI {
     }
 
     updateTurnIndicator(text) {
-        this.turnIndicator.textContent = `Turn: ${text}`;
+        this.turnIndicator.textContent = `${text}`;
+        
+        // Update the status light based on whose turn it is
+        const statusLight = document.getElementById('turn-status-light');
+        if (statusLight) {
+            // Remove existing classes
+            statusLight.classList.remove('player-turn', 'enemy-turn');
+            
+            // Determine if it's player turn or enemy turn
+            const isPlayerTurn = text.toLowerCase().includes('player') || 
+                                text.toLowerCase().includes(this.getPlayerName().toLowerCase());
+            
+            if (isPlayerTurn) {
+                statusLight.classList.add('player-turn');
+            } else {
+                statusLight.classList.add('enemy-turn');
+            }
+        }
     } updateFuel(current, max) {
         // Use shorter format for mobile - just show current value
         this.fuelIndicator.textContent = `Fuel: ${Math.floor(current)}`;
@@ -171,5 +194,22 @@ export class UI {
 
     hideGameOverMessage() {
         this.messageOverlay.style.display = 'none';
+    }
+
+    updateProfileDisplay(user) {
+        if (this.profileName && user) {
+            this.profileName.textContent = user.displayName || this.getPlayerName() || 'Guest';
+        }
+        
+        if (this.profileAvatar && user && user.photoURL) {
+            this.profileAvatar.src = user.photoURL;
+        }
+    }
+
+    setTurnStatus(isPlayerTurn) {
+        if (this.turnStatusLight) {
+            this.turnStatusLight.classList.remove('player-turn', 'enemy-turn');
+            this.turnStatusLight.classList.add(isPlayerTurn ? 'player-turn' : 'enemy-turn');
+        }
     }
 }

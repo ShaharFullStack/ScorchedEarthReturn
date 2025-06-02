@@ -6,7 +6,7 @@ export function setupScene(scene) {
     scene.background = new THREE.Color(0x87CEEB);
 
     // Enhanced multi-layer fog system for realistic atmospheric depth
-    scene.fog = new THREE.FogExp2(0x7fb3d5, 0.012);
+    scene.fog = new THREE.FogExp2(0xFFD700, 0.0055);
 
     // Generate deterministic seed for consistent world generation
     scene.userData.mapSeed = Math.random() * 1000;
@@ -34,7 +34,7 @@ export function setupScene(scene) {
  * Creates advanced terrain with multiple biomes and realistic features
  */
 function createAdvancedTerrain(scene) {
-    const groundSize = 180;
+    const groundSize = 300;
     const segments = 128;
     const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, segments, segments);
 
@@ -47,7 +47,7 @@ function createAdvancedTerrain(scene) {
         const y_plane = vertices.getY(i);
 
         const distanceFromCenter = Math.sqrt(x_plane * x_plane + y_plane * y_plane);
-        const maxDistance = groundSize / 2.1;
+        const maxDistance = groundSize / 2;
 
         // Multi-octave noise for realistic terrain
         const baseHeight = generateAdvancedNoise(x_plane, y_plane, seed);
@@ -228,9 +228,9 @@ function createAdvancedTerrainMaterial() {
 
     // Replace procedural diffuse with downloaded texture
     const diffuseTexture = loader.load('assets/textures/coast_sand_03_diff_4k.jpg');
-    const normalTexture = loader.load('assets/textures/coast_sand_03_norm_4kal.jpg');
-    const roughnessTexture = loader.load('assets/textures/coast_sand_03_roug_4kh.jpg');
-    const displacementTexture = loader.load('assets/textures/coast_sand_03_disp_4k.jpg');
+    const normalTexture = loader.load('assets/textures/coast_sand_03_disp_4k.png');
+    const roughnessTexture = loader.load('assets/textures/coast_sand_03_roug_4k.exr');
+    const displacementTexture = loader.load('assets/textures/coast_sand_03_nor_gl_4k.exr');
 
     // Set proper wrapping and repeat
     diffuseTexture.wrapS = diffuseTexture.wrapT = THREE.RepeatWrapping;

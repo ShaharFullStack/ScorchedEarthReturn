@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { Projectile } from './projectile.js';
 
-const FUEL_PER_MOVE_ACTION = 8; // Cost for one 'tick' of movement
-const FUEL_PER_ROTATE_ACTION = 5; // Cost for one 'tick' of rotation
+const FUEL_PER_MOVE_ACTION = 0; // Cost for one 'tick' of movement
+const FUEL_PER_ROTATE_ACTION = 0; // Cost for one 'tick' of rotation
 
 export class Tank {
     constructor(id, isPlayer, scene, initialPosition, color, gameInstance) {
@@ -26,17 +26,17 @@ export class Tank {
         this.currentFuel = this.maxFuel;
         
         this.moveSpeed = 5; // units per second
-        this.rotateSpeed = Math.PI / 6;
-        this.turretRotateSpeed = Math.PI / 6; 
+        this.rotateSpeed = Math.PI / 12;
+        this.turretRotateSpeed = Math.PI / 12; 
 
         this.hasFiredThisTurn = false;
-        this.collisionRadius = 1; // For collision detection
+        this.collisionRadius = 1.1; // For collision detection
         
         // Gravity physics for tank spawning
         this.gravity = 9.81 * 1.5; // Moderate gravity for tanks (less than projectiles)
         this.velocity = new THREE.Vector3(0, 0, 0); // Current velocity vector
         this.isGrounded = false; // Whether tank is on ground
-        this.groundY = 0; // Ground level cache
+        this.groundY = -0.2; // Ground level cache
         this.fallDamping = 0.8; // Reduce velocity on ground impact for realistic landing
         
         // Firing properties
@@ -75,7 +75,8 @@ export class Tank {
     }    setInitialPosition(position) {
         // Use collision system to find proper ground height
         if (this.game.collisionSystem) {
-            const terrainCheck = this.game.collisionSystem.checkTerrainCollision(position, this);            // Spawn tanks 2 meters above ground so they fall naturally into place
+            const terrainCheck = this.game.collisionSystem.checkTerrainCollision(position, this);            
+            // Spawn tanks 12 meters above ground so they fall naturally into place
             this.mesh.position.set(position.x, terrainCheck.groundY + 12.0, position.z);
             this.groundY = terrainCheck.groundY + 0.25; // Cache ground level for physics
         } else {
@@ -85,7 +86,7 @@ export class Tank {
                 const groundLevel = this.scene.userData.terrain.getHeightAt(this.mesh.position.x, this.mesh.position.z);                this.mesh.position.y = groundLevel + 2.25; // 2m above + 0.25 tank height
                 this.groundY = groundLevel + 0.25; // Cache ground level for physics
             } else {
-                this.mesh.position.y = position.y + 2.0; // 2 meters above given position
+                this.mesh.position.y = position.y + 12.0; // 12 meters above given position
                 this.groundY = position.y + 0.25; // Estimate ground level
             }
         }
@@ -978,6 +979,60 @@ export class Tank {
             // Tank is still falling, update position
             this.mesh.position.copy(newPosition);
         }
+    }
+    
+    heal(amount) {
+        if (this.isDestroyed) return false;
+        
+        const oldHealth = this.currentHealth;
+        this.currentHealth += amount;
+        
+        // Cap health at maximum
+        if (this.currentHealth > this.maxHealth) {
+            this.currentHealth = this.maxHealth;
+        }
+        
+        const actualHealing = this.currentHealth - oldHealth;
+        
+        console.log(`Tank ${this.id}: Healed ${actualHealing} HP. Health: ${oldHealth} -> ${this.currentHealth}`);
+        
+        // Play healing sound effect if available
+        if (this.game.audioManager) {
+            this.game.audioManager.playSound('heal', 0.5);
+        }
+        
+        // Update health bar immediately when healing
+        const camera = this.game && this.game.camera ? this.game.camera : null;
+        this.updateHealthBar(camera);
+        
+        // Create healing flash effect on health bar (green glow)
+        if (this.healthBarSprite) {
+            const originalScale = this.healthBarSprite.scale.clone();
+            
+            // Green healing flash animation
+            const flashDuration = 500;
+            const startTime = Date.now();
+            
+            const animateHealFlash = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / flashDuration;
+                
+                if (progress >= 1) {
+                    this.healthBarSprite.scale.copy(originalScale);
+                    return;
+                }
+                
+                // Gentle pulse effect for healing (slower and gentler than damage)
+                const pulse = 1 + Math.sin(progress * Math.PI * 2) * 0.15;
+                this.healthBarSprite.scale.copy(originalScale).multiplyScalar(pulse);
+                
+                requestAnimationFrame(animateHealFlash);
+            };
+            
+            animateHealFlash();
+        }
+        
+        return actualHealing > 0;
     }
     
     update(deltaTime, camera) {

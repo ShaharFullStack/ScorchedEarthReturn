@@ -269,7 +269,7 @@ export class AuthManager {
     this.authContainer.style.display = 'flex';
     this.authContainer.style.justifyContent = 'center';
     this.authContainer.style.alignItems = 'center';
-    this.authContainer.style.zIndex = '1000';
+    this.authContainer.style.zIndex = '30000';
     this.authContainer.style.opacity = '0';
     this.authContainer.style.transition = 'opacity 0.3s ease';
     this.authContainer.style.pointerEvents = 'none';
@@ -357,47 +357,20 @@ export class AuthManager {
   }
   
   createUserProfile() {
-    // Create the user profile container
-    this.profileContainer = document.createElement('div');
-    this.profileContainer.id = 'profileContainer';
-    this.profileContainer.style.position = 'fixed';
-    this.profileContainer.style.top = '65px';
-    this.profileContainer.style.left = '10px';
-    this.profileContainer.style.backgroundColor = 'rgba(30, 30, 30, 0.8)';
-    this.profileContainer.style.borderRadius = '40px';
-    this.profileContainer.style.padding = '5px';
-    this.profileContainer.style.display = 'flex';
-    this.profileContainer.style.alignItems = 'center';
-    this.profileContainer.style.zIndex = '9000';
-    this.profileContainer.style.cursor = 'pointer';
-    this.profileContainer.style.transition = 'all 0.3s ease';
-    this.profileContainer.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.3)';
-    this.profileContainer.style.opacity = '0';
-    this.profileContainer.style.transform = 'translateY(-20px)';
-    this.profileContainer.style.pointerEvents = 'none';
+    // Use the integrated profile UI elements from the HTML
+    this.profileContainer = document.getElementById('integrated-profile');
+    this.profileAvatar = document.getElementById('profile-avatar');
+    this.profileName = document.getElementById('profile-name');
     
-    // Create the profile avatar
-    this.profileAvatar = document.createElement('img');
-    this.profileAvatar.className = 'profile-avatar';
-    this.profileAvatar.style.width = '30px';
-    this.profileAvatar.style.height = '30px';
-    this.profileAvatar.style.borderRadius = '50%';
-    this.profileAvatar.style.objectFit = 'cover';
-    this.profileAvatar.style.border = '2px solid #4285F4';
-    this.profileAvatar.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci11c2VyIj48cGF0aCBkPSJNMjAgMjF2LTJhNCA0IDAgMCAwLTQtNEg4YTQgNCAwIDAgMC00IDR2MiI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+';
-    this.profileContainer.appendChild(this.profileAvatar);
+    if (!this.profileContainer || !this.profileAvatar || !this.profileName) {
+      console.error('Integrated profile UI elements not found in HTML');
+      return;
+    }
     
-    // Create the profile name
-    this.profileName = document.createElement('span');
-    this.profileName.className = 'profile-name';
-    this.profileName.style.color = 'white';
-    this.profileName.style.marginLeft = '10px';
-    this.profileName.style.marginRight = '10px';
-    this.profileName.style.fontSize = '14px';
-    this.profileName.style.fontWeight = 'bold';
-    this.profileName.style.whiteSpace = 'nowrap';
-    this.profileName.textContent = 'Guest';
-    this.profileContainer.appendChild(this.profileName);
+    // Set default avatar if not already set
+    if (!this.profileAvatar.src || this.profileAvatar.src.includes('data:image/svg+xml')) {
+      this.profileAvatar.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci11c2VyIj48cGF0aCBkPSJNMjAgMjF2LTJhNCA0IDAgMCAwLTQtNEg4YTQgNCAwIDAgMC00IDR2MiI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+';
+    }
     
     // Create dropdown menu
     this.createProfileMenu();
@@ -405,8 +378,9 @@ export class AuthManager {
     // Add click event to toggle menu
     this.profileContainer.addEventListener('click', () => this.toggleProfileMenu());
     
-    // Add the profile container to the document
-    document.body.appendChild(this.profileContainer);
+    // Initialize as visible since it's now part of the UI container
+    this.profileContainer.style.opacity = '1';
+    this.profileContainer.style.pointerEvents = 'auto';
   }
   
   createProfileMenu() {
@@ -573,27 +547,31 @@ export class AuthManager {
   
   updateProfileUI(user) {
     if (!user) {
-      this.profileContainer.style.opacity = '0';
-      this.profileContainer.style.transform = 'translateY(-20px)';
-      this.profileContainer.style.pointerEvents = 'none';
+      // Set default guest appearance
+      if (this.profileName) {
+        this.profileName.textContent = 'Guest';
+      }
+      if (this.profileAvatar) {
+        this.profileAvatar.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci11c2VyIj48cGF0aCBkPSJNMjAgMjF2LTJhNCA0IDAgMCAwLTQtNEg4YTQgNCAwIDAgMC00IDR2MiI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+';
+      }
       return;
     }
     
     // Update avatar if available
-    if (user.photoURL) {
+    if (user.photoURL && this.profileAvatar) {
       this.profileAvatar.src = user.photoURL;
-    } else {
+    } else if (this.profileAvatar) {
       // Default avatar
       this.profileAvatar.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci11c2VyIj48cGF0aCBkPSJNMjAgMjF2LTJhNCA0IDAgMCAwLTQtNEg4YTQgNCAwIDAgMC00IDR2MiI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+';
     }
     
     // Update name
-    this.profileName.textContent = user.displayName || 'Guest';
+    if (this.profileName) {
+      this.profileName.textContent = user.displayName || 'Guest';
+    }
     
-    // Show profile UI
-    this.profileContainer.style.opacity = '1';
-    this.profileContainer.style.transform = 'translateY(0)';
-    this.profileContainer.style.pointerEvents = 'auto';
+    // Profile is always visible now since it's integrated into the UI
+    console.log('Profile UI updated for user:', user.displayName || 'Guest');
   }
   
   async signInWithGoogle() {
