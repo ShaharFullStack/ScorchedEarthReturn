@@ -418,10 +418,10 @@ export class MobileControls {
     }
 
     /**
-     * Create enhanced mobile scope overlay with mobile-friendly controls
+     * Create simple mobile scope overlay with green tint and circular scope
      */
     createMobileScopeOverlay() {
-        // Create mobile scope overlay container
+        // Create mobile scope overlay with circular scope view
         this.scopeState.overlay = document.createElement('div');
         this.scopeState.overlay.id = 'mobile-scope-overlay';
         this.scopeState.overlay.style.cssText = `
@@ -431,12 +431,28 @@ export class MobileControls {
             width: 100vw;
             height: 100vh;
             pointer-events: none;
-            z-index: 1500;
+            z-index: 1000;
             display: none;
-            background: radial-gradient(circle at center, transparent 18%, rgba(0,0,0,0.95) 22%);
+            background: radial-gradient(circle at center, rgba(0, 255, 0, 0.5) 16%, rgba(0, 0, 0, 0.95) 20%);
         `;
 
-        // Create mobile crosshair - larger for touch devices
+        // Create circular scope boundary for mobile
+        const scopeCircle = document.createElement('div');
+        scopeCircle.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 70vmin;
+            height: 70vmin;
+            margin: -35vmin 0 0 -35vmin;
+            border: 3px solid rgba(0, 255, 0, 0.8);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 0 2px rgba(0, 0, 0, 0.8),
+                0 0 25px rgba(0, 255, 0, 0.4);
+        `;
+
+        // Create simple mobile crosshair
         const mobileCrosshair = document.createElement('div');
         mobileCrosshair.style.cssText = `
             position: absolute;
@@ -445,65 +461,56 @@ export class MobileControls {
             width: 60px;
             height: 60px;
             margin: -30px 0 0 -30px;
-            border: 3px solid rgba(0, 255, 65, 0.9);
-            border-radius: 50%;
-            box-shadow: 
-                0 0 0 2px rgba(0, 0, 0, 0.8),
-                0 0 20px rgba(0, 255, 65, 0.5);
         `;
 
-        // Mobile crosshair lines - thicker for visibility
+        // Vertical line
         const verticalLine = document.createElement('div');
         verticalLine.style.cssText = `
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 4px;
-            height: 30px;
-            margin: -15px 0 0 -2px;
-            background: rgba(0, 255, 65, 0.9);
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8);
+            width: 3px;
+            height: 60px;
+            margin: -30px 0 0 -1.5px;
+            background: rgba(16, 150, 16, 0.74);
         `;
 
+        // Horizontal line
         const horizontalLine = document.createElement('div');
         horizontalLine.style.cssText = `
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 30px;
-            height: 4px;
-            margin: -2px 0 0 -15px;
-            background: rgba(0, 255, 65, 0.9);
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8);
+            width: 60px;
+            height: 3px;
+            margin: -1.5px 0 0 -30px;
+            background: rgba(0, 255, 0, 0.8);
         `;
 
         mobileCrosshair.appendChild(verticalLine);
         mobileCrosshair.appendChild(horizontalLine);
+        this.scopeState.overlay.appendChild(scopeCircle);
         this.scopeState.overlay.appendChild(mobileCrosshair);
 
-        // Create mobile scope info panel
-        const scopeInfo = document.createElement('div');
-        scopeInfo.style.cssText = `
+        // Distance meter for mobile
+        const distanceDisplay = document.createElement('div');
+        distanceDisplay.id = 'mobile-distance-meter';
+        distanceDisplay.style.cssText = `
             position: absolute;
-            bottom: 120px;
+            top: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(0, 255, 65, 0.7);
-            border-radius: 10px;
-            padding: 15px 20px;
-            color: rgba(0, 255, 65, 0.9);
-            font-family: 'Orbitron', 'Arial', sans-serif;
-            font-size: 16px;
+            color: rgba(0, 255, 0, 0.9);
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
             text-align: center;
-            text-shadow: 0 0 5px rgba(0, 255, 65, 0.7);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 5px;
             pointer-events: none;
         `;
-        scopeInfo.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 8px;">🔭 SCOPE VIEW</div>
-            <div style="font-size: 14px; opacity: 0.8;">Touch & drag to aim</div>
-        `;
-        this.scopeState.overlay.appendChild(scopeInfo);
+        distanceDisplay.textContent = 'DISTANCE: --m';
+        this.scopeState.overlay.appendChild(distanceDisplay);
 
         // Create mobile exit scope button
         this.scopeState.exitButton = document.createElement('button');
@@ -511,20 +518,16 @@ export class MobileControls {
             position: absolute;
             top: 30px;
             right: 30px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(185, 43, 58, 0.9));
-            border: 3px solid rgba(255, 255, 255, 0.8);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             color: white;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
             pointer-events: auto;
-            box-shadow: 
-                0 4px 8px rgba(0, 0, 0, 0.4),
-                0 0 15px rgba(220, 53, 69, 0.5);
-            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -551,14 +554,12 @@ export class MobileControls {
         const touchArea = document.createElement('div');
         touchArea.style.cssText = `
             position: absolute;
-            top: 25%;
-            left: 25%;
-            width: 50%;
-            height: 50%;
-            border: 2px dashed rgba(0, 255, 65, 0.3);
-            border-radius: 20px;
+            top: 20%;
+            left: 20%;
+            width: 60%;
+            height: 60%;
             pointer-events: auto;
-            background: rgba(0, 255, 65, 0.05);
+            background: transparent;
         `;
         this.scopeState.overlay.appendChild(touchArea);
 

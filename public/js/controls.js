@@ -372,7 +372,7 @@ class BarrelScopeCameraController {
   }
 
   createScopeOverlay() {
-    // Create scope overlay container
+    // Create scope overlay with green tint and circular scope view
     this.scopeOverlay = document.createElement('div');
     this.scopeOverlay.id = 'scope-overlay';
     this.scopeOverlay.style.cssText = `
@@ -384,10 +384,26 @@ class BarrelScopeCameraController {
       pointer-events: none;
       z-index: 1000;
       display: none;
-      background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.9) 22%);
+      background: radial-gradient(circle at center, rgba(0, 255, 0, 0.5) 18%, rgba(0, 0, 0, 0.95) 22%);
     `;
 
-    // Create crosshair
+    // Create circular scope boundary
+    const scopeCircle = document.createElement('div');
+    scopeCircle.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 36vmin;
+      height: 36vmin;
+      margin: -18vmin 0 0 -18vmin;
+      border: 2px solid rgba(0, 255, 0, 0.8);
+      border-radius: 50%;
+      box-shadow: 
+        0 0 0 2px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(0, 255, 0, 0.3);
+    `;
+
+    // Create simple crosshair
     this.crosshair = document.createElement('div');
     this.crosshair.style.cssText = `
       position: absolute;
@@ -396,58 +412,55 @@ class BarrelScopeCameraController {
       width: 40px;
       height: 40px;
       margin: -20px 0 0 -20px;
-      border: 2px solid rgba(255, 255, 255, 0.8);
-      border-radius: 50%;
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
     `;
 
-    // Add crosshair lines
+    // Vertical line
     const verticalLine = document.createElement('div');
     verticalLine.style.cssText = `
       position: absolute;
       top: 50%;
       left: 50%;
       width: 2px;
-      height: 20px;
-      margin: -10px 0 0 -1px;
-      background: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+      height: 40px;
+      margin: -20px 0 0 -1px;
+      background: rgba(0, 255, 0, 0.8);
     `;
 
+    // Horizontal line  
     const horizontalLine = document.createElement('div');
     horizontalLine.style.cssText = `
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 20px;
+      width: 40px;
       height: 2px;
-      margin: -1px 0 0 -10px;
-      background: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+      margin: -1px 0 0 -20px;
+      background: rgba(0, 255, 0, 0.8);
     `;
+
+    // Distance meter
+    const distanceDisplay = document.createElement('div');
+    distanceDisplay.id = 'distance-meter';
+    distanceDisplay.style.cssText = `
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(0, 255, 0, 0.9);
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 5px 10px;
+      border-radius: 3px;
+    `;
+    distanceDisplay.textContent = 'DISTANCE: --m';
 
     this.crosshair.appendChild(verticalLine);
     this.crosshair.appendChild(horizontalLine);
+    this.scopeOverlay.appendChild(scopeCircle);
     this.scopeOverlay.appendChild(this.crosshair);
-
-    // Add range indicators
-    const rangeInfo = document.createElement('div');
-    rangeInfo.style.cssText = `
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.8);
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      text-align: center;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-    `;
-    rangeInfo.innerHTML = `
-      <div>SCOPE VIEW</div>
-      <div style="font-size: 12px; margin-top: 5px;">Mouse: Aim | Right-click: Exit</div>
-    `;
-    this.scopeOverlay.appendChild(rangeInfo);
+    this.scopeOverlay.appendChild(distanceDisplay);
 
     document.body.appendChild(this.scopeOverlay);
   }
