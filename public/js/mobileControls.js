@@ -83,15 +83,27 @@ export class MobileControls {
 
         // Show mobile controls
         const mobileControls = document.getElementById('mobile-controls');
-        console.log('Mobile controls element found:', !!mobileControls);
-
-        if (mobileControls) {
+        console.log('Mobile controls element found:', !!mobileControls);        if (mobileControls) {
             console.log('Current display style:', mobileControls.style.display);
             console.log('Current computed style:', window.getComputedStyle(mobileControls).display);
 
             mobileControls.style.display = 'flex';
             mobileControls.style.visibility = 'visible';
-            mobileControls.classList.add('force-enable'); // Add class for CSS targeting
+            
+            // Only add force-enable class if force enabled on desktop, not for actual mobile devices
+            const forceEnable = localStorage.getItem('forceMobileControls') === 'true';
+            const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const hasTouchScreen = ('ontouchstart' in window) && (navigator.maxTouchPoints > 0);
+            const isSmallScreen = window.innerWidth <= 768;
+            const isActualMobileDevice = isMobileUserAgent || (hasTouchScreen && isSmallScreen);
+            
+            if (forceEnable && !isActualMobileDevice) {
+                mobileControls.classList.add('force-enable'); // Only for testing on desktop
+                console.log('Added force-enable class for desktop testing');
+            } else {
+                mobileControls.classList.remove('force-enable'); // Remove if it was previously added
+                console.log('Not adding force-enable class - actual mobile device');
+            }
 
             console.log('After setting display:flex - computed style:', window.getComputedStyle(mobileControls).display);
             console.log('Mobile controls classes:', mobileControls.className);
@@ -100,11 +112,22 @@ export class MobileControls {
             console.error('Mobile controls element not found in DOM');
             console.log('Available elements with mobile:',
                 Array.from(document.querySelectorAll('[id*="mobile"]')).map(el => el.id));
+        }        // Only add body class for mobile styling if this is actually a mobile device
+        // Don't add it when force-enabled on desktop, as that would trigger CSS mobile rules
+        const forceEnable = localStorage.getItem('forceMobileControls') === 'true';
+        const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const hasTouchScreen = ('ontouchstart' in window) && (navigator.maxTouchPoints > 0);
+        const isSmallScreen = window.innerWidth <= 768;
+        const isActualMobileDevice = isMobileUserAgent || (hasTouchScreen && isSmallScreen);
+        
+        if (isActualMobileDevice) {
+            document.body.classList.add('mobile-device');
+            console.log('Added mobile-device class - actual mobile device detected');
+        } else {
+            document.body.classList.remove('mobile-device');
+            console.log('Not adding mobile-device class - force-enabled on desktop');
         }
-
-        // Add body class for mobile styling since mobile controls are enabled
-        document.body.classList.add('mobile-device');
-        console.log('Body classes:', document.body.className); this.setupMovementButtons();
+        console.log('Body classes:', document.body.className);this.setupMovementButtons();
         this.setupActionButtons();
         this.setupTouchCamera();
 
@@ -418,11 +441,10 @@ export class MobileControls {
 
     /**
      * Create simple mobile scope overlay with green tint and circular scope
-     */
-  createMobileScopeOverlay() {
+     */  createMobileScopeOverlay() {
     // Create scope overlay with green tint and circular scope view
     this.scopeOverlay = document.createElement('div');
-    this.scopeOverlay.id = 'scope-overlay';
+    this.scopeOverlay.id = 'mobile-scope-overlay';  // Use unique ID for mobile
     this.scopeOverlay.style.cssText = `
       position: fixed;
       top: 0;
@@ -553,9 +575,10 @@ export class MobileControls {
     this.crosshair.appendChild(horizontalLine5);
     this.scopeOverlay.appendChild(scopeCircle);
     this.scopeOverlay.appendChild(this.crosshair);
-    this.scopeOverlay.appendChild(distanceDisplay);
-
-    document.body.appendChild(this.scopeOverlay);
+    this.scopeOverlay.appendChild(distanceDisplay);    document.body.appendChild(this.scopeOverlay);
+    
+    // Assign the created overlay to scopeState for touch controls
+    this.scopeState.overlay = this.scopeOverlay;
   }
 
     /**
@@ -629,15 +652,27 @@ export class MobileControls {
         // Show mobile scope overlay
         if (this.scopeState.overlay) {
             this.scopeState.overlay.style.display = 'block';
-        }
-
-        // Keep mobile controls visible but add scope-active class for higher z-index
+        }        // Keep mobile controls visible but add scope-active class for higher z-index
         const mobileControls = document.getElementById('mobile-controls');
         if (mobileControls) {
             mobileControls.classList.add('scope-active');
-            // Ensure they stay visible
-            mobileControls.style.display = 'flex';
-            mobileControls.style.zIndex = '30000';
+            
+            // Only show mobile controls if this is actually a mobile device (not force-enabled desktop)
+            const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const hasTouchScreen = ('ontouchstart' in window) && (navigator.maxTouchPoints > 0);
+            const isSmallScreen = window.innerWidth <= 768;
+            const isActualMobileDevice = isMobileUserAgent || (hasTouchScreen && isSmallScreen);
+            
+            if (this.isEnabled && isActualMobileDevice) {
+                // Show mobile controls only on actual mobile devices
+                mobileControls.style.display = 'flex';
+                mobileControls.style.zIndex = '30000';
+                console.log('Mobile controls kept visible - actual mobile device');
+            } else {
+                // Ensure mobile controls stay hidden on desktop (even if force-enabled)
+                mobileControls.style.display = 'none';
+                console.log('Mobile controls hidden - desktop device or not mobile');
+            }
         }
 
         // Add scope-active class to body for additional CSS targeting
@@ -662,14 +697,28 @@ export class MobileControls {
         if (desktopScopeOverlay) {
             desktopScopeOverlay.style.display = 'none';
             console.log('Hidden desktop scope overlay to prevent dual overlay issue');
-        }
-
-        // Remove scope-active classes and reset z-index
+        }        // Remove scope-active classes and reset z-index
         const mobileControls = document.getElementById('mobile-controls');
         if (mobileControls) {
             mobileControls.classList.remove('scope-active');
-            mobileControls.style.display = 'flex';
-            mobileControls.style.zIndex = '25000'; // Reset to default high value
+            
+            // Only show mobile controls if this is actually a mobile device (not force-enabled desktop)
+            const forceEnable = localStorage.getItem('forceMobileControls') === 'true';
+            const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const hasTouchScreen = ('ontouchstart' in window) && (navigator.maxTouchPoints > 0);
+            const isSmallScreen = window.innerWidth <= 768;
+            const isActualMobileDevice = isMobileUserAgent || (hasTouchScreen && isSmallScreen);
+            
+            if (this.isEnabled && isActualMobileDevice) {
+                // Show mobile controls only on actual mobile devices
+                mobileControls.style.display = 'flex';
+                mobileControls.style.zIndex = '25000'; // Reset to default high value
+                console.log('Mobile controls kept visible - actual mobile device');
+            } else {
+                // Ensure mobile controls stay hidden on desktop (even if force-enabled)
+                mobileControls.style.display = 'none';
+                console.log('Mobile controls hidden - desktop device or not mobile');
+            }
         }
 
         // Remove scope-active class from body

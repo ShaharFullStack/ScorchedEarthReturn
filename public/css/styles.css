@@ -1026,11 +1026,16 @@ body.mobile-device #mobile-controls {
     display: flex !important;
 }
 
-/* Mobile controls should always be above scope overlay */
-body.scope-active #mobile-controls,
-#mobile-controls.scope-active {
+/* Mobile controls should always be above scope overlay - but only on mobile devices */
+body.mobile-device.scope-active #mobile-controls,
+body.mobile-device #mobile-controls.scope-active {
     z-index: 30000 !important;
     display: flex !important;
+}
+
+/* On non-mobile devices, scope-active should not force mobile controls to show */
+body:not(.mobile-device) #mobile-controls.scope-active {
+    display: none !important;
 }
 
 /* Ensure individual mobile control buttons are visible above scope */
