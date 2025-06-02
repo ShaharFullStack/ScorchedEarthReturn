@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { Projectile } from './projectile.js';
 
-const FUEL_PER_MOVE_ACTION = 0; // Cost for one 'tick' of movement
-const FUEL_PER_ROTATE_ACTION = 0; // Cost for one 'tick' of rotation
+const FUEL_PER_MOVE_ACTION = 6; // Cost for one 'tick' of movement
+const FUEL_PER_ROTATE_ACTION = 4; // Cost for one 'tick' of rotation
 
 export class Tank {
     constructor(id, isPlayer, scene, initialPosition, color, gameInstance) {
@@ -706,7 +706,7 @@ export class Tank {
                 this.mesh.position.y = newGroundLevel;
                 // Update cached ground level for gravity physics
                 if (this.isGrounded) {
-                    this.groundY = newGroundLevel;
+                this.groundY = newGroundLevel;
                 }
             }
         }
@@ -819,9 +819,56 @@ export class Tank {
         // Play shooting sound effect
         if (this.game.audioManager) {
             this.game.audioManager.playSound('shoot');
+        }        if (this.isPlayer) {
+            this.game.ui.updateActionIndicator("Aim / Move / Space to End Turn");
+              // Check if we're in barrel scope mode and auto-exit if needed
+            // Get the reference to MainApp from the window object
+            console.log('Tank shoot: Checking camera mode to auto-exit barrel scope if needed');
+            console.log('mainApp exists:', !!window.mainApp);
+            console.log('mainAppInstance exists:', !!window.mainAppInstance);
+            
+            if (window.mainApp) {
+                console.log('mainApp camera mode:', window.mainApp.currentCameraMode);
+            }
+            
+            if (window.mainAppInstance) {
+                console.log('mainAppInstance camera mode:', window.mainAppInstance.currentCameraMode);
+            }
+            
+            if ((window.mainApp && window.mainApp.currentCameraMode === 'barrel-scope') || 
+                (window.mainAppInstance && window.mainAppInstance.currentCameraMode === 'barrel-scope')) {
+                console.log('Barrel scope detected! Will exit after short delay');
+                // Add a small delay to exit scope mode after shot is fired
+                setTimeout(() => {
+                    console.log('Auto-exiting barrel scope mode after shooting');
+                    // Try both possible references to ensure one works
+                    if (window.mainApp && typeof window.mainApp.exitBarrelScope === 'function') {
+                        console.log('Using window.mainApp reference to exit barrel scope');
+                        window.mainApp.exitBarrelScope();
+                    } else if (window.mainAppInstance && typeof window.mainAppInstance.exitBarrelScope === 'function') {
+                        console.log('Using window.mainAppInstance reference to exit barrel scope');
+                        window.mainAppInstance.exitBarrelScope();                    } else if (this.game && typeof this.game.exitBarrelScope === 'function') {
+                        console.log('Using game.exitBarrelScope reference as fallback');
+                        this.game.exitBarrelScope();
+                    } else if (typeof window.exitBarrelScope === 'function') {
+                        console.log('Using static global exitBarrelScope function');
+                        window.exitBarrelScope();
+                    } else {
+                        console.error('Failed to find any instance to exit barrel scope');
+                        // Ultimate fallback - try to manually restore third-person view
+                        try {
+                            const scopeOverlay = document.getElementById('scope-overlay');
+                            if (scopeOverlay) scopeOverlay.style.display = 'none';
+                            console.log('Manually hiding scope overlay as last resort');
+                        } catch (e) {
+                            console.error('Even manual scope overlay hiding failed:', e);
+                        }
+                    }
+                }, 300); // Short delay to see the shot firing before switching views
+            } else {
+                console.log('Not in barrel scope mode, or scope references not found - no need to exit');
+            }
         }
-        
-        if (this.isPlayer) this.game.ui.updateActionIndicator("Aim / Move (Fired)");
     }
     
     takeDamage(amount) {
@@ -836,8 +883,7 @@ export class Tank {
         if (this.game.audioManager) {
             this.game.audioManager.playSound('tankHit');
         }
-        
-        if (this.currentHealth <= 0) {
+          if (this.currentHealth <= 0) {
             this.currentHealth = 0;
             this.isDestroyed = true;
             
@@ -847,6 +893,14 @@ export class Tank {
             }
             
             this.destroy();
+            
+            // Check if this destruction triggers a win/loss condition
+            if (this.game && this.game.checkWinCondition) {
+                // Small delay to ensure explosion effects are visible
+                setTimeout(() => {
+                    this.game.checkWinCondition();
+                }, 1000);
+            }
         }
         
         // Update health bar immediately when taking damage

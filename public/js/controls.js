@@ -509,7 +509,6 @@ class BarrelScopeCameraController {
 
     document.body.appendChild(this.scopeOverlay);
   }
-
   enable() {
     this.enabled = true;
 
@@ -521,6 +520,13 @@ class BarrelScopeCameraController {
     this.camera.fov = this.fov;
     this.camera.updateProjectionMatrix();
 
+    // Hide mobile scope overlay first to prevent dual overlay issue
+    const mobileScopeOverlay = document.getElementById('mobile-scope-overlay');
+    if (mobileScopeOverlay) {
+      mobileScopeOverlay.style.display = 'none';
+      console.log('Hidden mobile scope overlay before showing desktop overlay');
+    }
+
     // Show scope overlay
     if (this.scopeOverlay) {
       this.scopeOverlay.style.display = 'block';
@@ -531,7 +537,6 @@ class BarrelScopeCameraController {
 
     console.log('Barrel scope camera enabled - barrel visibility:', this.tank.barrel ? this.tank.barrel.visible : 'barrel not found');
   }
-
   disable() {
     this.enabled = false;
 
@@ -542,6 +547,13 @@ class BarrelScopeCameraController {
     // Hide scope overlay
     if (this.scopeOverlay) {
       this.scopeOverlay.style.display = 'none';
+    }
+
+    // Also ensure mobile scope overlay is hidden (safety check)
+    const mobileScopeOverlay = document.getElementById('mobile-scope-overlay');
+    if (mobileScopeOverlay && mobileScopeOverlay.style.display !== 'none') {
+      mobileScopeOverlay.style.display = 'none';
+      console.log('Also hidden mobile scope overlay during barrel scope disable');
     }
 
     // Show tank parts

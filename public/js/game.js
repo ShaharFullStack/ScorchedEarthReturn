@@ -13,10 +13,9 @@ const PLAYER_ID = 'player';
 const ENEMY_ID_PREFIX = 'enemy_';
 
 // Difficulty configurations
-const DIFFICULTY_SETTINGS = {
-    sargent: {
+const DIFFICULTY_SETTINGS = {    sargent: {
         name: "Sargent",
-        aiReactio600e: 600,
+        aiReactionTime: 600,
         aimAccuracy: 0.3,
         strategicThinking: 0.2,
         aggressiveness: 0.3,
@@ -35,17 +34,16 @@ const DIFFICULTY_SETTINGS = {
         coverUsage: 0.7,
         playerHealthBonus: 0,
         playerFuelBonus: 0
-    },
-    colonel: {
+    },    colonel: {
         name: "Colonel",
-        aiReactio3000me: 2700,
+        aiReactionTime: 2700,
         aimAccuracy: 0.95,
         strategicThinking: 0.9,
         aggressiveness: 0.8,
         fuelEfficiency: 0.95,
         coverUsage: 0.9,
-        playerHealthBonus: -25,
-        playerFuelBonus: -25
+        playerHealthBonus: -10,
+        playerFuelBonus: -10
     }
 };
 
@@ -71,12 +69,10 @@ export class Game {
         this.enemyTanks = [];
         this.projectiles = [];
         this.buildings = [];
-        this.trees = [];
-
-        this.currentPlayerIndex = -1;
+        this.trees = [];        this.currentPlayerIndex = -1;
         this.activeTank = null;
         this.cameraController = null;
-        this.difficulty = 'colonel'; // Default difficulty
+        this.difficulty = 'lieutenant'; // Default to medium if not set properly
         this.difficultyConfig = DIFFICULTY_SETTINGS[this.difficulty];
         this.gameState = 'LOADING'; // Initial game state
 
@@ -117,12 +113,16 @@ export class Game {
 
     setCameraController(controller) {
         this.cameraController = controller;
-    }
-
-    setDifficulty(difficulty) {
+    }    setDifficulty(difficulty) {
+        console.log(`Game: Setting difficulty to: ${difficulty}`);
+        if (!DIFFICULTY_SETTINGS[difficulty]) {
+            console.error(`Invalid difficulty: ${difficulty}. Using default.`);
+            difficulty = 'lieutenant'; // Fallback to medium difficulty
+        }
+        
         this.difficulty = difficulty;
         this.difficultyConfig = DIFFICULTY_SETTINGS[difficulty];
-        console.log(`Difficulty set to: ${this.difficultyConfig.name}`);
+        console.log(`Game: Difficulty set to: ${this.difficultyConfig.name}`);
         this.startGameInitialization();
     }
 
@@ -258,8 +258,7 @@ export class Game {
         this.ui.setTurnStatus(true); // Player turn = green light
         this.ui.updateFuel(this.activeTank.currentFuel, this.activeTank.maxFuel);
         this.ui.updateHealth(this.activeTank.id, this.activeTank.currentHealth, this.activeTank.maxHealth);
-        this.ui.toggleEndTurnButton(true); 
-        this.ui.updateActionIndicator("Fire / Adjust Power");
+        this.ui.toggleEndTurnButton(true); this.ui.updateActionIndicator("Fire / Adjust Power");
         this.ui.updatePowerIndicator(this.playerTank.currentPower, this.playerTank.minPower, this.playerTank.maxPower);
 
         // Play enter tank sound
@@ -322,7 +321,7 @@ export class Game {
             }
             this.gameState = 'ENEMY_TURN';
             this.activeTank.resetTurnStats();
-            this.ui.updateTurnIndicator(`${this.difficultyConfig.name} Enemy ${this.currentPlayerIndex + 1}'s Turn`);
+            this.ui.updateTurnIndicator(`Enemy ${this.currentPlayerIndex + 1}'s Turn`);
             this.ui.setTurnStatus(false); // Enemy turn = red light            
             this.ui.updateActionIndicator("Enemy is analyzing battlefield...");
             this.ui.toggleEndTurnButton(false);
@@ -360,9 +359,15 @@ export class Game {
 
         // End turn with appropriate delay
         const turnDelay = Math.max(800, 2000 - (this.difficultyConfig.strategicThinking * 1200));
-        setTimeout(() => this.nextTurn(), turnDelay);
+        setTimeout(() => {
+            // Check for win condition before proceeding to next turn
+            this.checkWinCondition();
+            if (this.gameState !== 'GAME_OVER') {
+                this.nextTurn();
+            }
+        }, turnDelay);
     }
-
+    
     // AI decision making using collision system for line of sight checks
     makeAIDecision(enemy, playerPos, distanceToPlayer) {
         const config = enemy.aiDifficulty;
@@ -835,10 +840,19 @@ export class Game {
         }
 
         return Math.max(0.3, Math.min(1, accuracy));
-    }
-
-    endPlayerTurn() {
+    }    endPlayerTurn() {
         if (this.gameState === 'PLAYER_TURN') {
+            // Exit any active scope mode before ending turn
+            // Exit desktop barrel scope if active
+            if (window.mainApp && window.mainApp.exitBarrelScope) {
+                window.mainApp.exitBarrelScope();
+            }
+            
+            // Exit mobile scope if active
+            if (this.mobileControls && this.mobileControls.exitMobileScope) {
+                this.mobileControls.exitMobileScope();
+            }
+            
             this.nextTurn();
         }
     }
@@ -898,7 +912,6 @@ export class Game {
         }
     }
 
-    // ...existing code...
     update(deltaTime) {
         if (this.gameState === 'GAME_OVER' || this.gameState === 'DIFFICULTY_SELECTION') return;
 
@@ -922,8 +935,7 @@ export class Game {
             } else {
                 // USE COLLISION SYSTEM INSTEAD OF OLD METHOD
                 if (this.collisionSystem) {
-                    const collisionResult = this.collisionSystem.checkProjectileCollisions(p);
-                    if (collisionResult.hasCollision) {
+                    const collisionResult = this.collisionSystem.checkProjectileCollisions(p);                    if (collisionResult.hasCollision) {
                         this.collisionSystem.applyCollisionEffects(collisionResult, p);
                         this.scene.remove(p.mesh);
                         this.projectiles.splice(i, 1);
@@ -931,6 +943,14 @@ export class Game {
                         // Update UI if tank was hit
                         if (collisionResult.type === 'tank') {
                             this.ui.updateHealth(collisionResult.tank.id, collisionResult.tank.currentHealth, collisionResult.tank.maxHealth);
+                            
+                            // Check if this hit caused a tank to be destroyed
+                            if (collisionResult.tank.isDestroyed) {
+                                // Delay the check to let destruction animations play
+                                setTimeout(() => {
+                                    this.checkWinCondition();
+                                }, 1000);
+                            }
                         }
                     }
                 } else {
@@ -984,15 +1004,19 @@ export class Game {
                 const hitPosition = projectile.mesh.position.clone();
                 hitPosition.y = tank.mesh.position.y + 0.8;
 
-                // Create basic particle effects
-                if (this.particleSystem) {
-                    this.particleSystem.createTankHitEffect(hitPosition, 1.0);
-                }
-
                 // Apply damage
                 tank.takeDamage(projectile.damage);
                 this.ui.updateHealth(tank.id, tank.currentHealth, tank.maxHealth);
                 projectile.shouldBeRemoved = true;
+                
+                // After damage is applied, check if win condition achieved
+                // We delay this check to allow animations to complete
+                if (tank.isDestroyed) {
+                    setTimeout(() => {
+                        this.checkWinCondition();
+                    }, 1000);
+                }
+                
                 return;
             }
         }
@@ -1313,9 +1337,40 @@ export class Game {
         };
 
         fadeAnimation();
-    } gameOver(playerWon) {
+    }
+
+    gameOver(playerWon) {
         if (this.gameState === 'GAME_OVER') return;
         this.gameState = 'GAME_OVER';
+
+        console.log(`Game over! ${playerWon ? 'Player won' : 'Player lost'}`);
+
+        // Create a dramatic camera effect - zoom out to show the battlefield
+        if (this.cameraController) {
+            const duration = 2000; // 2 seconds
+            const zoomOutDistance = playerWon ? 20 : 10; // Zoom out more for victory
+            const startPosition = this.camera.position.clone();
+            const startTime = Date.now();
+            
+            const animateCamera = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Apply easing for smoother animation
+                const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic easing out
+                
+                // Gradually pull back the camera
+                const newPosition = startPosition.clone();
+                newPosition.y += zoomOutDistance * easedProgress;
+                this.camera.position.copy(newPosition);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateCamera);
+                }
+            };
+            
+            animateCamera();
+        }
 
         // Stop all continuous sounds when game ends
         if (this.audioManager) {
@@ -1334,12 +1389,59 @@ export class Game {
             }
         }
 
+        // Create color overlay effect based on outcome
+        const overlayColor = playerWon ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = overlayColor;
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '50';
+        overlay.style.transition = 'opacity 1s';
+        document.body.appendChild(overlay);
+
+        // Fade out overlay after a moment
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 1000);
+        }, 2000);
+
         const difficultyText = this.difficultyConfig.name;
         const message = playerWon ?
             `Victory on ${difficultyText} Difficulty!\nAll Enemies Destroyed!` :
             `Defeat on ${difficultyText} Difficulty!\nYour Tank Was Destroyed!`;
-        this.ui.showGameOverMessage(message);
+            
+        // Short delay before showing the game over message to let the camera effect play
+        setTimeout(() => {
+            this.ui.showGameOverMessage(message);
+        }, 1500);
+        
         this.ui.toggleEndTurnButton(false);
+    }
+
+    checkWinCondition() {
+        // Return early if the game is already in GAME_OVER state
+        if (this.gameState === 'GAME_OVER') return;
+
+        // Check if player's tank is destroyed
+        if (this.playerTank.isDestroyed) {
+            // Player loses
+            this.gameOver(false);
+            return;
+        }
+
+        // Check if all enemy tanks are destroyed
+        const allEnemiesDestroyed = this.enemyTanks.every(tank => tank.isDestroyed);
+        if (allEnemiesDestroyed) {
+            // Player wins
+            this.gameOver(true);
+            return;
+        }
     }
 
     setupInputListeners() {
@@ -1352,7 +1454,14 @@ export class Game {
                 case 'KeyD': this.inputStates.rotateRight = true; break;
                 case 'KeyQ': this.inputStates.turretLeft = true; break;
                 case 'KeyE': this.inputStates.turretRight = true; break;
-                case 'Space': if (!this.playerTank.hasFiredThisTurn) this.inputStates.fire = true; break;
+                case 'Space': 
+                    if (!this.playerTank.hasFiredThisTurn) {
+                        this.inputStates.fire = true;
+                    } else {
+                        // If player has already fired, spacebar ends the turn
+                        this.endPlayerTurn();
+                    }
+                    break;
                 case 'ArrowUp': this.inputStates.increasePower = true; break;
                 case 'ArrowDown': this.inputStates.decreasePower = true; break;
                 case 'ArrowRight':

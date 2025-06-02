@@ -401,7 +401,7 @@ canvas {
 
 /* Mobile Controls - Hidden by default on desktop */
 #mobile-controls {
-    z-index: 20000;
+    z-index: 25000 !important;
     display: none;
 }
 
@@ -586,7 +586,7 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 150000;
     font-family: 'Orbitron', monospace;
     backdrop-filter: blur(3px);
 }
@@ -738,7 +738,7 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 3000;
+    z-index: 50000;
     backdrop-filter: blur(5px);
     transition: all 0.3s ease;
 }
@@ -1026,10 +1026,31 @@ body.mobile-device #mobile-controls {
     display: flex !important;
 }
 
+/* Mobile controls should always be above scope overlay */
+body.scope-active #mobile-controls,
+#mobile-controls.scope-active {
+    z-index: 30000 !important;
+    display: flex !important;
+}
+
+/* Ensure individual mobile control buttons are visible above scope */
+.mobile-control-group {
+    z-index: 30001 !important;
+    position: relative;
+}
+
+.dpad-btn, .action-btn, .power-btn {
+    z-index: 30002 !important;
+    position: relative;
+}
+
 /* Mobile Responsive Design - More Aggressive Optimization */
 @media (max-width: 768px) {
     body {
         overflow: hidden; /* Prevent any scrolling on mobile */
+    }
+    .profileContainer {
+        top: 70px;
     }
     
     /* Much more compact UI container */

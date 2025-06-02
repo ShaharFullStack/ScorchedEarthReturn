@@ -23,6 +23,24 @@ class MainApp {
         
         // Initialize authentication system
         this.authManager = new AuthManager((user) => this.onAuthStateChanged(user));
+        
+        // Make the MainApp instance accessible globally (using consistent naming)
+        window.mainAppInstance = this;
+        window.mainApp = this; // Ensure both references point to the same instance
+        
+        // Set default camera mode
+        this.currentCameraMode = 'third-person';
+        
+        // Expose a static version of the exitBarrelScope method for global access
+        window.exitBarrelScope = () => {
+            console.log('Static exitBarrelScope called');
+            if (this.currentCameraMode === 'barrel-scope' && 
+                typeof this.exitBarrelScope === 'function') {
+                this.exitBarrelScope();
+                return true;
+            }
+            return false;
+        };
 
         this.init();
     }
@@ -41,14 +59,15 @@ class MainApp {
           // Make game instance available globally for debugging
         window.gameInstance = this.game;
         
-        // Make main app instance available globally for mobile controls
-        window.mainApp = this;
-        
         // Initialize audio on first user interaction
         this.initializeAudio();
           // Set up difficulty selection handler (called after login)
         this.ui.onDifficultyChange = async (difficulty) => {
-            await this.game.startGameInitialization();
+            console.log(`Main: Difficulty selected: ${difficulty}`);
+            // Let the game handle initialization with the proper difficulty
+            this.game.setDifficulty(difficulty); 
+            
+            // After game initializes, set up camera and controls
             this.activeCameraTarget = this.game.playerTank.mesh;
             this.setupControllers();
             this.setupCameraControls();
@@ -448,7 +467,10 @@ class MainApp {
     setupCameraControls() {
         // Handle camera switching with V key
         document.addEventListener('keydown', (event) => {
+            // Allow V key to toggle scope mode as long as it's the player's turn
+            // regardless of whether they've fired or not
             if (event.code === 'KeyV' && this.game && this.game.gameState === 'PLAYER_TURN') {
+                console.log('V key pressed for scope toggle, playerHasFired:', this.game.playerTank.hasFiredThisTurn);
                 this.switchCameraMode();
             }
             // Handle right-click or Escape to exit scope view
@@ -467,10 +489,17 @@ class MainApp {
     }
 
     switchCameraMode() {
-        if (!this.game || !this.game.playerTank) return;
+        console.log('Attempting to switch camera mode, gameState:', this.game ? this.game.gameState : 'no game');
+        console.log('Player has fired:', this.game && this.game.playerTank ? this.game.playerTank.hasFiredThisTurn : 'unknown');
+        
+        if (!this.game || !this.game.playerTank) {
+            console.warn('Cannot switch camera mode: game or playerTank not available');
+            return;
+        }
 
         // Ensure barrel scope controller is initialized
         if (!this.barrelScopeController) {
+            console.log('Initializing new barrel scope controller');
             this.barrelScopeController = new BarrelScopeCameraController(
                 this.camera, 
                 this.game.playerTank, 
@@ -483,6 +512,7 @@ class MainApp {
         }
 
         // Cycle through camera modes: third-person -> barrel-scope -> third-person
+        console.log('Current camera mode:', this.currentCameraMode);
         switch (this.currentCameraMode) {
             case 'third-person':
                 this.activateBarrelScope();
@@ -495,6 +525,7 @@ class MainApp {
 
     activateBarrelScope() {
         console.log('Switching to barrel scope view');
+        console.log('Player can fire:', !this.game.playerTank.hasFiredThisTurn);
         
         // Disable current camera controller
         if (this.thirdPersonController && this.thirdPersonController.enabled) {
@@ -504,13 +535,30 @@ class MainApp {
             this.firstPersonController.disable();
         }
 
+        // Ensure barrelScopeController exists
+        if (!this.barrelScopeController) {
+            console.log('Creating barrel scope controller because it was missing');
+            this.barrelScopeController = new BarrelScopeCameraController(
+                this.camera, 
+                this.game.playerTank, 
+                this.renderer.domElement, 
+                {
+                    mouseSensitivity: 0.001,
+                    fov: 30
+                }
+            );
+        }
+
         // Enable barrel scope controller
         this.barrelScopeController.enable();
         this.game.setCameraController(this.barrelScopeController);
         this.currentCameraMode = 'barrel-scope';
 
-        // Show scope activation message
-        this.ui.showMessage('Barrel Scope Active - V to exit', 2000);
+        // Show appropriate scope activation message based on firing status
+        const message = this.game.playerTank.hasFiredThisTurn ? 
+            'Barrel Scope Active (View Only) - V to exit' : 
+            'Barrel Scope Active - V to exit';
+        this.ui.showMessage(message, 2000);
     }
 
     exitBarrelScope() {
@@ -519,12 +567,47 @@ class MainApp {
         // Disable barrel scope controller
         if (this.barrelScopeController && this.barrelScopeController.enabled) {
             this.barrelScopeController.disable();
+        } else {
+            console.log('Barrel scope controller not enabled or not available');
+            // Try to hide any scope overlay that might be visible
+            const scopeOverlay = document.getElementById('scope-overlay');
+            if (scopeOverlay) {
+                console.log('Found scope overlay, hiding it');
+                scopeOverlay.style.display = 'none';
+            }
+        }
+
+        // Also ensure mobile scope overlay is hidden (safety check for dual overlay prevention)
+        const mobileScopeOverlay = document.getElementById('mobile-scope-overlay');
+        if (mobileScopeOverlay && mobileScopeOverlay.style.display !== 'none') {
+            console.log('Also hiding mobile scope overlay for safety');
+            mobileScopeOverlay.style.display = 'none';
         }
 
         // Return to third-person view
-        this.thirdPersonController.enable();
-        this.game.setCameraController(this.thirdPersonController);
+        if (this.thirdPersonController) {
+            this.thirdPersonController.enable();
+            if (this.game) {
+                this.game.setCameraController(this.thirdPersonController);
+            } else {
+                console.warn('Game object not available, cannot set camera controller');
+            }
+        } else {
+            console.warn('Third person controller not available');
+        }
+        
+        // Always update camera mode
         this.currentCameraMode = 'third-person';
+        
+        // Show scope deactivation message
+        if (this.ui) {
+            this.ui.showMessage('Third Person View Active', 2000);
+        }
+        
+        // Expose this method on the game object too for redundancy
+        if (this.game && !this.game.exitBarrelScope) {
+            this.game.exitBarrelScope = () => this.exitBarrelScope();
+        }
     }
 }
 
@@ -578,7 +661,6 @@ window.forceMobileControls = function() {
     alert('Mobile controls enabled! Check the bottom of the screen.');
 };
 
-// Note: Test mobile button removed as mobile controls redesign is complete
 
 // Initialize the main application
-window.mainApp = new MainApp();
+const app = new MainApp(); // This already sets window.mainApp in the constructor

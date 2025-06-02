@@ -188,12 +188,63 @@ export class UI {
     }
 
     showGameOverMessage(message) {
-        this.messageOverlay.textContent = message;
-        this.messageOverlay.style.display = 'block';
+        // Create a stylish game over overlay
+        this.messageOverlay.innerHTML = `
+            <div class="game-over-container">
+                <h2>Game Over</h2>
+                <p>${message.replace('\n', '<br>')}</p>
+                <div class="game-over-buttons">
+                    <button id="restart-game-btn" class="btn">Play Again</button>
+                    <button id="return-menu-btn" class="btn">Return to Menu</button>
+                </div>
+            </div>
+        `;
+        
+        this.messageOverlay.style.display = 'flex';
+        
+        // Add event listeners to buttons
+        document.getElementById('restart-game-btn').addEventListener('click', () => {
+            this.hideGameOverMessage();
+            // Reload the page to restart the game
+            location.reload();
+        });
+        
+        document.getElementById('return-menu-btn').addEventListener('click', () => {
+            this.restartGame();
+        });
     }
 
     hideGameOverMessage() {
         this.messageOverlay.style.display = 'none';
+    }
+    
+    showMessage(message, duration = 3000) {
+        // Create a temporary message that will auto-hide
+        const tempMessage = document.createElement('div');
+        tempMessage.className = 'temp-message';
+        tempMessage.textContent = message;
+        document.body.appendChild(tempMessage);
+        
+        // Show with animation
+        setTimeout(() => {
+            tempMessage.classList.add('visible');
+        }, 10);
+        
+        // Auto-hide after duration
+        setTimeout(() => {
+            tempMessage.classList.remove('visible');
+            setTimeout(() => {
+                document.body.removeChild(tempMessage);
+            }, 500); // Wait for fade-out animation
+        }, duration);
+    }
+    
+    restartGame() {
+        // Hide any overlays
+        this.hideGameOverMessage();
+        
+        // Show difficulty selector again to restart the game
+        this.showDifficultySelector();
     }
 
     updateProfileDisplay(user) {

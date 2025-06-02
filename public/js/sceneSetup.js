@@ -34,8 +34,8 @@ export function setupScene(scene) {
  * Creates advanced terrain with multiple biomes and realistic features
  */
 function createAdvancedTerrain(scene) {
-    const groundSize = 300;
-    const segments = 128;
+    const groundSize = 270;
+    const segments = 256;
     const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, segments, segments);
 
     const vertices = groundGeo.attributes.position;
@@ -53,14 +53,14 @@ function createAdvancedTerrain(scene) {
         const baseHeight = generateAdvancedNoise(x_plane, y_plane, seed);
         let finalHeight = baseHeight;
 
-        // Create island shape with realistic coastal transitions
+        // Create island 
         if (distanceFromCenter > maxDistance * 0.6) {
             const coastalFactor = Math.max(0, 1 - (distanceFromCenter - maxDistance * 0.6) / (maxDistance * 0.4));
             const smoothCoast = coastalFactor * coastalFactor * (3 - 2 * coastalFactor);
             finalHeight = finalHeight * smoothCoast;
 
             // Add beach areas
-            if (distanceFromCenter > maxDistance * 0.85 && finalHeight > 0.2) {
+            if (distanceFromCenter > maxDistance * 0.95 && finalHeight > 0.022) {
                 finalHeight = Math.max(0.2, finalHeight * 0.3); // Beach level
             }
         }
@@ -228,9 +228,9 @@ function createAdvancedTerrainMaterial() {
 
     // Replace procedural diffuse with downloaded texture
     const diffuseTexture = loader.load('assets/textures/coast_sand_03_diff_4k.jpg');
-    const normalTexture = loader.load('assets/textures/coast_sand_03_disp_4k.png');
-    const roughnessTexture = loader.load('assets/textures/coast_sand_03_roug_4k.exr');
-    const displacementTexture = loader.load('assets/textures/coast_sand_03_nor_gl_4k.exr');
+    const normalTexture = loader.load('assets/textures/coast_sand_03_nor_gl_4k.exr');
+    const roughnessTexture = loader.load('assets/textures/coast_sand_03_rough_4k.exr');
+    const displacementTexture = loader.load('assets/textures/coast_sand_03_disp_4k.png');
 
     // Set proper wrapping and repeat
     diffuseTexture.wrapS = diffuseTexture.wrapT = THREE.RepeatWrapping;

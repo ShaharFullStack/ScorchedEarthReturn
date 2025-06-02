@@ -15,9 +15,9 @@ export class CollisionSystem {
         
         // Collision settings
         this.settings = {
-            tankRadius: 0.99,
+            tankRadius: 0.95,
             projectileRadius: 0.3,
-            terrainMargin: 0.4, // How much above terrain tanks sit
+            terrainMargin: 0.25, // How much above terrain tanks sit
             buildingMargin: 0.5,
             treeMargin: 0.3
         };
@@ -814,7 +814,7 @@ export class CollisionSystem {
         }
 
         // Check if position is underwater or too steep
-        if (terrainHeight < -1.5) { // More lenient for crater areas
+        if (terrainHeight < -1) {
             return {
                 suitable: false,
                 reason: 'underwater',
@@ -875,7 +875,7 @@ export class CollisionSystem {
         const samplePoints = 8; // Check 8 points around the position
         
         for (let i = 0; i < samplePoints; i++) {
-            const angle = (i / samplePoints) * Math.PI / 2;
+            const angle = (i / samplePoints) * Math.PI * 2;
             const sampleX = position.x + Math.cos(angle) * samplingRadius;
             const sampleZ = position.z + Math.sin(angle) * samplingRadius;
             const samplePos = new THREE.Vector3(sampleX, 0, sampleZ);
