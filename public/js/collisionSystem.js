@@ -814,7 +814,7 @@ export class CollisionSystem {
         }
 
         // Check if position is underwater or too steep
-        if (terrainHeight < -1) {
+        if (terrainHeight < -1.5) { // More lenient for crater areas
             return {
                 suitable: false,
                 reason: 'underwater',
