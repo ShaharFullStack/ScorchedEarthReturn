@@ -524,9 +524,13 @@ export class AuthManager {
     this.authContainer.style.opacity = '0';
     this.authContainer.style.pointerEvents = 'none';
   }
-  
-  showProfile() {
-    alert('Profile feature coming soon!');
+    showProfile() {
+    // Redirect to UI statistics page
+    if (window.mainAppInstance && window.mainAppInstance.ui) {
+      window.mainAppInstance.ui.showUserStatistics();
+    } else {
+      console.warn('Main app instance or UI not available');
+    }
   }
   
   showUpgrades() {

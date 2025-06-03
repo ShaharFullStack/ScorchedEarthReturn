@@ -637,7 +637,7 @@ export class MobileControls {
             mobileControls.classList.add('scope-active');
             // Ensure they stay visible
             mobileControls.style.display = 'flex';
-            mobileControls.style.zIndex = '30000';
+            mobileControls.style.zIndex = '3005';
         }
 
         // Add scope-active class to body for additional CSS targeting
@@ -669,7 +669,7 @@ export class MobileControls {
         if (mobileControls) {
             mobileControls.classList.remove('scope-active');
             mobileControls.style.display = 'flex';
-            mobileControls.style.zIndex = '25000'; // Reset to default high value
+            mobileControls.style.zIndex = '3000'; // Reset to default high value
         }
 
         // Remove scope-active class from body
@@ -759,7 +759,7 @@ export class MobileControls {
             border: 3px solid #4a5d23;
             border-radius: 15px;
             padding: 20px;
-            z-index: 30000;
+            z-index: 3002;
             display: none;
             box-shadow: 
                 0 10px 30px rgba(0, 0, 0, 0.8),

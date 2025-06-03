@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { Projectile } from './projectile.js';
 
-const FUEL_PER_MOVE_ACTION = 6; // Cost for one 'tick' of movement
-const FUEL_PER_ROTATE_ACTION = 4; // Cost for one 'tick' of rotation
+const FUEL_PER_MOVE_ACTION = 0; // Cost for one 'tick' of movement
+const FUEL_PER_ROTATE_ACTION = 0; // Cost for one 'tick' of rotation
 
 export class Tank {
     constructor(id, isPlayer, scene, initialPosition, color, gameInstance) {
@@ -26,8 +26,8 @@ export class Tank {
         this.currentFuel = this.maxFuel;
         
         this.moveSpeed = 5; // units per second
-        this.rotateSpeed = Math.PI / 12;
-        this.turretRotateSpeed = Math.PI / 12; 
+        this.rotateSpeed = Math.PI;
+        this.turretRotateSpeed = Math.PI / 9; 
 
         this.hasFiredThisTurn = false;
         this.collisionRadius = 1.1; // For collision detection
@@ -814,7 +814,7 @@ export class Tank {
         // Store reference to shooting tank for impact logging
         projectile.shootingTank = this;
         this.game.addProjectile(projectile);
-        this.hasFiredThisTurn = true;
+        this.hasFiredThisTurn = false;
         
         // Play shooting sound effect
         if (this.game.audioManager) {
@@ -882,10 +882,14 @@ export class Tank {
         // Play tank hit sound effect
         if (this.game.audioManager) {
             this.game.audioManager.playSound('tankHit');
-        }
-          if (this.currentHealth <= 0) {
+        }          if (this.currentHealth <= 0) {
             this.currentHealth = 0;
             this.isDestroyed = true;
+            
+            // Track tank destruction for statistics (only count enemy tanks destroyed by player)
+            if (this.game && this.game.gameStats && !this.isPlayer) {
+                this.game.gameStats.tanksDestroyed++;
+            }
             
             // Play explosion sound for destroyed tank
             if (this.game.audioManager) {

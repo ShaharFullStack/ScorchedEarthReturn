@@ -13,7 +13,7 @@ export class AudioManager {
     }    async loadSounds() {
         const soundFiles = {
             click: './assets/sounds/click.mp3',
-            openingScreen: './assets/sounds/OpeningTune.mp3',
+            openingScreen: './assets/sounds/OpeningTune2.mp3',
             gameplayBg: './assets/sounds/OpeningTune.mp3', // Reuse opening tune for background music
             enterTank: './assets/sounds/EnterTank.mp3',
             exitTank: './assets/sounds/ExitTank.mp3',

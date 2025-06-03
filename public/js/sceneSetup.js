@@ -148,19 +148,19 @@ function generateAdvancedNoise(x, y, seed) {
     const baseHeight = 3.0 + Math.sin(seed + x * 0.01) * 0.8;
 
     // Large mountain features
-    const mountains = (Math.sin((x + seed * 10) * 0.05) * Math.cos((y + seed * 15) * 0.04) + 1) / 2 * 12.0;
+    const mountains = (Math.sin((x + seed * 10) * 0.05) * Math.cos((y + seed * 15) * 0.04) + 1) / 2 * 6.0;
 
     // Rolling hills
-    const hills = (Math.sin((x + seed * 25) * 0.12) * Math.cos((y + seed * 30) * 0.1) + 1) / 2 * 6.0;
+    const hills = (Math.sin((x + seed * 25) * 0.12) * Math.cos((y + seed * 30) * 0.1) + 1) / 2 * 3.0;
 
     // Medium ridges
-    const ridges = (Math.sin((x + seed * 50) * 0.2) * Math.cos((y + seed * 75) * 0.18) + 1) / 2 * 3.0;
+    const ridges = (Math.sin((x + seed * 50) * 0.2) * Math.cos((y + seed * 75) * 0.18) + 1) / 2 * 1.5;
 
     // Fine details
-    const details = (Math.sin((x + seed * 100) * 0.3) * Math.cos((y + seed * 125) * 0.25) + 1) / 2 * 1.5;
+    const details = (Math.sin((x + seed * 100) * 0.3) * Math.cos((y + seed * 125) * 0.25) + 1) / 2 * 0.75;
 
     // Micro variations
-    const micro = Math.sin((x + seed * 200) * 0.5 + Math.PI / 3) * Math.cos((y + seed * 250) * 0.4 + Math.PI / 4) * 0.5;
+    const micro = Math.sin((x + seed * 200) * 0.5 + Math.PI / 3) * Math.cos((y + seed * 250) * 0.4 + Math.PI / 4) * 0.25;
 
     return baseHeight + mountains + hills + ridges + details + micro;
 }

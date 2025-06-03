@@ -8,6 +8,9 @@ import { AuthManager } from './auth.js';
 
 class MainApp {
     constructor() {
+        // Clear cache on startup
+        this.clearCache();
+        
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500); // Extended far plane for larger map
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -67,12 +70,29 @@ class MainApp {
             // Let the game handle initialization with the proper difficulty
             this.game.setDifficulty(difficulty); 
             
-            // After game initializes, set up camera and controls
-            this.activeCameraTarget = this.game.playerTank.mesh;
-            this.setupControllers();
-            this.setupCameraControls();
-            this.game.setCameraController(this.thirdPersonController);
-            this.animate();
+            // Wait for game initialization to complete and verify playerTank exists
+            if (this.game.playerTank && this.game.playerTank.mesh) {
+                // After game initializes, set up camera and controls
+                this.activeCameraTarget = this.game.playerTank.mesh;
+                this.setupControllers();
+                this.setupCameraControls();
+                this.game.setCameraController(this.thirdPersonController);
+                this.animate();
+            } else {
+                console.error('PlayerTank not properly initialized - retrying in 100ms');
+                // Retry after a short delay
+                setTimeout(() => {
+                    if (this.game.playerTank && this.game.playerTank.mesh) {
+                        this.activeCameraTarget = this.game.playerTank.mesh;
+                        this.setupControllers();
+                        this.setupCameraControls();
+                        this.game.setCameraController(this.thirdPersonController);
+                        this.animate();
+                    } else {
+                        console.error('PlayerTank still not available after retry');
+                    }
+                }, 100);
+            }
         };window.addEventListener('resize', this.onWindowResize.bind(this), false);
         
         if (this.isMobile) {
@@ -607,6 +627,114 @@ class MainApp {
         // Expose this method on the game object too for redundancy
         if (this.game && !this.game.exitBarrelScope) {
             this.game.exitBarrelScope = () => this.exitBarrelScope();
+        }
+    }
+    
+    /**
+     * Clear browser cache and storage on game startup
+     */
+    clearCache() {
+        try {
+            console.log('Clearing cache on game startup...');
+            
+            // Clear localStorage
+            if (typeof Storage !== "undefined" && localStorage) {
+                // Get auth-related keys to preserve
+                const authKeys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('firebase') || key.includes('auth') || key.includes('user'))) {
+                        authKeys.push({
+                            key: key,
+                            value: localStorage.getItem(key)
+                        });
+                    }
+                }
+                
+                // Clear all localStorage
+                localStorage.clear();
+                
+                // Restore auth-related data
+                authKeys.forEach(item => {
+                    localStorage.setItem(item.key, item.value);
+                });
+                
+                console.log('LocalStorage cleared (auth data preserved)');
+            }
+            
+            // Clear sessionStorage
+            if (typeof Storage !== "undefined" && sessionStorage) {
+                sessionStorage.clear();
+                console.log('SessionStorage cleared');
+            }
+            
+            // Clear IndexedDB (if available)
+            if ('indexedDB' in window) {
+                this.clearIndexedDB();
+            }
+            
+            // Clear Service Worker cache (if available)
+            if ('serviceWorker' in navigator && 'caches' in window) {
+                this.clearServiceWorkerCache();
+            }
+            
+            // Clear browser cache programmatically (limited support)
+            if ('webkitClearCache' in window) {
+                window.webkitClearCache();
+            }
+            
+            console.log('Cache clearing completed');
+            
+        } catch (error) {
+            console.warn('Error clearing cache:', error);
+        }
+    }
+    
+    /**
+     * Clear IndexedDB databases
+     */
+    async clearIndexedDB() {
+        try {
+            if ('databases' in indexedDB) {
+                const databases = await indexedDB.databases();
+                await Promise.all(
+                    databases.map(db => {
+                        // Skip Firebase-related databases to preserve auth
+                        if (db.name && !db.name.includes('firebase')) {
+                            return new Promise((resolve, reject) => {
+                                const deleteReq = indexedDB.deleteDatabase(db.name);
+                                deleteReq.onsuccess = () => resolve();
+                                deleteReq.onerror = () => reject(deleteReq.error);
+                            });
+                        }
+                        return Promise.resolve();
+                    })
+                );
+                console.log('IndexedDB cleared (Firebase databases preserved)');
+            }
+        } catch (error) {
+            console.warn('Error clearing IndexedDB:', error);
+        }
+    }
+    
+    /**
+     * Clear Service Worker caches
+     */
+    async clearServiceWorkerCache() {
+        try {
+            const cacheNames = await caches.keys();
+            await Promise.all(
+                cacheNames.map(cacheName => {
+                    // Skip auth-related caches
+                    if (!cacheName.includes('auth') && !cacheName.includes('firebase')) {
+                        return caches.delete(cacheName);
+                    }
+                    return Promise.resolve();
+                })
+            );
+            console.log('Service Worker caches cleared (auth caches preserved)');
+        } catch (error) {
+            console.warn('Error clearing Service Worker cache:', error);
         }
     }
 }

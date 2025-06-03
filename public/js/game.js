@@ -76,13 +76,18 @@ export class Game {
         this.difficultyConfig = DIFFICULTY_SETTINGS[this.difficulty];
         this.gameState = 'LOADING'; // Initial game state
 
-        this.gameState = 'DIFFICULTY_SELECTION';
-
-        // Initialize particle system
+        this.gameState = 'DIFFICULTY_SELECTION';        // Initialize particle system
         this.particleSystem = new ParticleSystem(this.scene);
 
         // Initialize collision system (WILL BE SET AFTER SCENE SETUP)
         this.collisionSystem = null;
+
+        // Game statistics tracking
+        this.gameStats = {
+            shotsFired: 0,
+            tanksDestroyed: 0,
+            gameStartTime: null
+        };
 
         this.inputStates = {
             moveForward: false,
@@ -178,10 +183,9 @@ export class Game {
                 if (tooClose) {
                     attempts++;
                     continue;
-                }
-                // Use enhanced collision system to check tank spawn suitability
+                }                // Use enhanced collision system to check tank spawn suitability
                 if (this.collisionSystem) {
-                    const spawnCheck = this.collisionSystem.checkTankSpawnSuitability(position, tankCollisionRadius, 3.0);
+                    const spawnCheck = this.collisionSystem.checkSpawnSuitability(position, tankCollisionRadius, 3.0);
                     if (!spawnCheck.suitable) {
                         tooClose = true;
                         attempts++;
@@ -246,9 +250,7 @@ export class Game {
             this.enemyTanks.push(enemy);
             this.scene.add(enemy.mesh);
         }
-    }
-
-    startGame() {
+    }    startGame() {
         this.gameState = 'PLAYER_TURN';
         this.currentPlayerIndex = -1;
         this.activeTank = this.playerTank;
@@ -260,6 +262,13 @@ export class Game {
         this.ui.updateHealth(this.activeTank.id, this.activeTank.currentHealth, this.activeTank.maxHealth);
         this.ui.toggleEndTurnButton(true); this.ui.updateActionIndicator("Fire / Adjust Power");
         this.ui.updatePowerIndicator(this.playerTank.currentPower, this.playerTank.minPower, this.playerTank.maxPower);
+
+        // Initialize game statistics
+        this.gameStats = {
+            shotsFired: 0,
+            tanksDestroyed: 0,
+            gameStartTime: Date.now()
+        };
 
         // Play enter tank sound
         if (this.audioManager) {
@@ -287,7 +296,7 @@ export class Game {
     }
 
     nextTurn() {
-        this.activeTank.hasFiredThisTurn = false;
+        this.activeTank.hasFired = false;
 
         if (this.gameState === 'GAME_OVER') return;
 
@@ -299,12 +308,16 @@ export class Game {
         this.currentPlayerIndex++;
         if (this.currentPlayerIndex >= this.enemyTanks.length) {
             this.currentPlayerIndex = -1;
-        }
-
-        if (this.currentPlayerIndex === -1) {
+        }        if (this.currentPlayerIndex === -1) {
             this.activeTank = this.playerTank;
             if (this.activeTank.isDestroyed) {
-                this.gameOver(false);
+                // Player loses - pass current game statistics
+                const gameStats = {
+                    shotsFired: this.gameStats?.shotsFired || 0,
+                    tanksDestroyed: this.gameStats?.tanksDestroyed || 0,
+                    gameStartTime: this.gameStats?.gameStartTime || null
+                };
+                this.gameOver(false, gameStats);
                 return;
             }
             this.gameState = 'PLAYER_TURN';
@@ -980,11 +993,14 @@ export class Game {
             }
         }
         // Input handling is now done in handlePlayerInput method
-    }
-
-    addProjectile(projectile) {
+    }    addProjectile(projectile) {
         this.projectiles.push(projectile);
         this.scene.add(projectile.mesh);
+        
+        // Track shots fired for statistics
+        if (this.gameStats) {
+            this.gameStats.shotsFired++;
+        }
     }
 
     /**
@@ -1338,108 +1354,462 @@ export class Game {
 
         fadeAnimation();
     }
+gameOver(playerWon, gameStats = {}) {
+    if (this.gameState === 'GAME_OVER') return;
+    this.gameState = 'GAME_OVER';
 
-    gameOver(playerWon) {
-        if (this.gameState === 'GAME_OVER') return;
-        this.gameState = 'GAME_OVER';
+    console.log(`Game over! ${playerWon ? 'Player won' : 'Player lost'}`);
 
-        console.log(`Game over! ${playerWon ? 'Player won' : 'Player lost'}`);
+    // Merge provided gameStats with collected game statistics
+    const finalGameStats = {
+        ...gameStats,
+        shotsFired: this.gameStats?.shotsFired || 0,
+        tanksDestroyed: this.gameStats?.tanksDestroyed || 0,
+        gameStartTime: this.gameStats?.gameStartTime || null
+    };
 
-        // Create a dramatic camera effect - zoom out to show the battlefield
-        if (this.cameraController) {
-            const duration = 2000; // 2 seconds
-            const zoomOutDistance = playerWon ? 20 : 10; // Zoom out more for victory
-            const startPosition = this.camera.position.clone();
-            const startTime = Date.now();
-            
-            const animateCamera = () => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                // Apply easing for smoother animation
-                const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic easing out
-                
-                // Gradually pull back the camera
-                const newPosition = startPosition.clone();
-                newPosition.y += zoomOutDistance * easedProgress;
-                this.camera.position.copy(newPosition);
-                
-                if (progress < 1) {
-                    requestAnimationFrame(animateCamera);
-                }
-            };
-            
-            animateCamera();
-        }
+    // Update user statistics if user is logged in
+    this.updateUserStats(playerWon, finalGameStats);
 
-        // Stop all continuous sounds when game ends
-        if (this.audioManager) {
-            this.audioManager.stopAllContinuousSounds();
-            this.audioManager.stopAllMusic();
-
-            if (playerWon) {
-                // Play victory sound and music
-                this.audioManager.playMusic('openingScreen');
-            } else {
-                // Play defeat sounds
-                this.audioManager.playExitTankSound();
-                setTimeout(() => {
-                    this.audioManager.playSound('explosion');
-                }, 500);
-            }
-        }
-
-        // Create color overlay effect based on outcome
-        const overlayColor = playerWon ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
-        const overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.backgroundColor = overlayColor;
-        overlay.style.pointerEvents = 'none';
-        overlay.style.zIndex = '50';
-        overlay.style.transition = 'opacity 1s';
-        document.body.appendChild(overlay);
-
-        // Fade out overlay after a moment
-        setTimeout(() => {
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                document.body.removeChild(overlay);
-            }, 1000);
-        }, 2000);
-
-        const difficultyText = this.difficultyConfig.name;
-        const message = playerWon ?
-            `Victory on ${difficultyText} Difficulty!\nAll Enemies Destroyed!` :
-            `Defeat on ${difficultyText} Difficulty!\nYour Tank Was Destroyed!`;
-            
-        // Short delay before showing the game over message to let the camera effect play
-        setTimeout(() => {
-            this.ui.showGameOverMessage(message);
-        }, 1500);
-        
-        this.ui.toggleEndTurnButton(false);
+    // Enhanced camera sequence with multiple phases
+    if (this.cameraController) {
+        this.createCinematicGameOverSequence(playerWon);
     }
 
-    checkWinCondition() {
+    // Stop all game sounds and create audio atmosphere
+    if (this.audioManager) {
+        this.audioManager.stopAllContinuousSounds();
+        this.audioManager.stopAllMusic();
+        this.createGameOverAudio(playerWon);
+    }
+
+    // Create enhanced visual effects
+    this.createGameOverVisualEffects(playerWon);
+
+    // Show enhanced game over UI after cinematic sequence
+    setTimeout(() => {
+        this.showEnhancedGameOverUI(playerWon, finalGameStats);
+    }, 2500);
+    
+    this.ui.toggleEndTurnButton(false);
+}
+
+createCinematicGameOverSequence(playerWon) {
+    const totalDuration = 4000;
+    const phase1Duration = 1500; // Initial dramatic pause
+    const phase2Duration = 2500; // Camera movement
+    
+    const startPosition = this.camera.position.clone();
+    const startRotation = this.camera.rotation.clone();
+    const startTime = Date.now();
+
+    // Phase 1: Dramatic pause with slight shake
+    const phase1 = () => {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < phase1Duration) {
+            // Subtle camera shake for impact
+            const intensity = playerWon ? 0.1 : 0.3;
+            const shake = {
+                x: (Math.random() - 0.5) * intensity,
+                y: (Math.random() - 0.5) * intensity,
+                z: (Math.random() - 0.5) * intensity
+            };
+            
+            this.camera.position.copy(startPosition.clone().add(shake));
+            requestAnimationFrame(phase1);
+        } else {
+            // Reset position and start phase 2
+            this.camera.position.copy(startPosition);
+            phase2();
+        }
+    };
+
+    // Phase 2: Cinematic camera movement
+    const phase2 = () => {
+        const elapsed = Date.now() - startTime - phase1Duration;
+        const progress = Math.min(elapsed / phase2Duration, 1);
+        
+        // Different camera movements based on outcome
+        if (playerWon) {
+            // Victory: Rise up and look down at the battlefield
+            const easedProgress = 1 - Math.pow(1 - progress, 2); // Quadratic easing
+            const newPosition = startPosition.clone();
+            newPosition.y += 25 * easedProgress;
+            newPosition.z += 15 * easedProgress;
+            
+            // Slight downward tilt to survey the battlefield
+            const newRotation = startRotation.clone();
+            newRotation.x -= 0.3 * easedProgress;
+            
+            this.camera.position.copy(newPosition);
+            this.camera.rotation.copy(newRotation);
+        } else {
+            // Defeat: Dramatic pull back and tilt
+            const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic easing
+            const newPosition = startPosition.clone();
+            newPosition.y += 15 * easedProgress;
+            newPosition.z += 20 * easedProgress;
+            newPosition.x += 10 * Math.sin(progress * Math.PI) * easedProgress;
+            
+            this.camera.position.copy(newPosition);
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(phase2);
+        }
+    };
+
+    phase1();
+}
+
+createGameOverAudio(playerWon) {
+    if (playerWon) {
+        // Victory audio sequence
+        setTimeout(() => this.audioManager.playSound('victory_fanfare'), 500);
+        setTimeout(() => this.audioManager.playMusic('victory_theme', 0.7), 1000);
+    } else {
+        // Defeat audio sequence
+        this.audioManager.playSound('tank_destruction');
+        setTimeout(() => this.audioManager.playSound('explosion_large'), 300);
+        setTimeout(() => this.audioManager.playSound('defeat_sting'), 800);
+        setTimeout(() => this.audioManager.playMusic('defeat_theme', 0.5), 1500);
+    }
+}
+
+createGameOverVisualEffects(playerWon) {
+    // Create particle effect overlay
+    this.createParticleEffect(playerWon);
+    
+    // Enhanced color overlay with animation
+    this.createAnimatedOverlay(playerWon);
+    
+    // Screen flash effect
+    this.createScreenFlash(playerWon);
+}
+
+createParticleEffect(playerWon) {
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '45';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    const particles = [];
+    const particleCount = playerWon ? 100 : 50;
+
+    // Create particles
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * (playerWon ? 4 : 2),
+            vy: (Math.random() - 0.5) * (playerWon ? 4 : 2),
+            size: Math.random() * (playerWon ? 6 : 3) + 2,
+            opacity: 1,
+            color: playerWon ? 
+                `hsl(${Math.random() * 60 + 40}, 100%, 70%)` : // Gold/yellow for victory
+                `hsl(${Math.random() * 30}, 100%, 50%)` // Red/orange for defeat
+        });
+    }
+
+    const animateParticles = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        particles.forEach((particle, index) => {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.opacity -= 0.01;
+            particle.size *= 0.995;
+            
+            if (particle.opacity <= 0) {
+                particles.splice(index, 1);
+                return;
+            }
+            
+            ctx.save();
+            ctx.globalAlpha = particle.opacity;
+            ctx.fillStyle = particle.color;
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+        
+        if (particles.length > 0) {
+            requestAnimationFrame(animateParticles);
+        } else {
+            document.body.removeChild(canvas);
+        }
+    };
+
+    setTimeout(animateParticles, 1000);
+}
+
+createAnimatedOverlay(playerWon) {
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '40';
+    overlay.style.opacity = '0';
+    
+    if (playerWon) {
+        overlay.style.background = 'radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(0,255,0,0.1) 50%, transparent 100%)';
+    } else {
+        overlay.style.background = 'radial-gradient(circle, rgba(255,0,0,0.3) 0%, rgba(139,0,0,0.2) 50%, transparent 100%)';
+    }
+    
+    document.body.appendChild(overlay);
+    
+    // Animate overlay
+    overlay.style.transition = 'opacity 1.5s ease-in-out';
+    setTimeout(() => overlay.style.opacity = '1', 100);
+    
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(overlay), 1500);
+    }, 3000);
+}
+
+createScreenFlash(playerWon) {
+    const flash = document.createElement('div');
+    flash.style.position = 'fixed';
+    flash.style.top = '0';
+    flash.style.left = '0';
+    flash.style.width = '100%';
+    flash.style.height = '100%';
+    flash.style.backgroundColor = playerWon ? 'rgba(255,255,255,0.8)' : 'rgba(255,0,0,0.6)';
+    flash.style.pointerEvents = 'none';
+    flash.style.zIndex = '60';
+    flash.style.opacity = '1';
+    flash.style.transition = 'opacity 0.3s ease-out';
+    document.body.appendChild(flash);
+    
+    setTimeout(() => {
+        flash.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(flash), 300);
+    }, 100);
+}
+
+showEnhancedGameOverUI(playerWon, gameStats) {
+    // Create modern game over modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        backdrop-filter: blur(5px);
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+    `;
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(40, 40, 50, 0.95));
+        border: 2px solid ${playerWon ? '#FFD700' : '#FF4444'};
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+        transform: scale(0.8);
+        transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    `;
+
+    const title = document.createElement('h1');
+    title.textContent = playerWon ? '🏆 VICTORY!' : '💥 DEFEAT';
+    title.style.cssText = `
+        font-family: 'Arial Black', Arial, sans-serif;
+        font-size: 3.5rem;
+        margin: 0 0 20px 0;
+        color: ${playerWon ? '#FFD700' : '#FF4444'};
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+        letter-spacing: 3px;
+    `;
+
+    const subtitle = document.createElement('h2');
+    const difficultyText = this.difficultyConfig?.name || 'Unknown';
+    subtitle.textContent = playerWon ? 
+        `All Enemies Destroyed!` : 
+        `Your Tank Was Destroyed!`;
+    subtitle.style.cssText = `
+        font-family: Arial, sans-serif;
+        font-size: 1.4rem;
+        margin: 0 0 30px 0;
+        color: #CCCCCC;
+        font-weight: normal;
+    `;
+
+    const difficultyBadge = document.createElement('div');
+    difficultyBadge.textContent = `${difficultyText} Difficulty`;
+    difficultyBadge.style.cssText = `
+        display: inline-block;
+        background: ${playerWon ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'};
+        border: 1px solid ${playerWon ? '#FFD700' : '#FF4444'};
+        border-radius: 25px;
+        padding: 8px 20px;
+        margin: 0 0 30px 0;
+        font-size: 1rem;
+        color: ${playerWon ? '#FFD700' : '#FF4444'};
+        font-weight: bold;
+    `;
+
+    // Add stats if provided
+    const statsContainer = document.createElement('div');
+    if (gameStats && Object.keys(gameStats).length > 0) {
+        statsContainer.style.cssText = `
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        `;
+        
+        const statsTitle = document.createElement('h3');
+        statsTitle.textContent = '📊 Battle Statistics';
+        statsTitle.style.cssText = `
+            color: #FFFFFF;
+            margin: 0 0 15px 0;
+            text-align: center;
+            font-size: 1.3rem;
+        `;
+        statsContainer.appendChild(statsTitle);
+
+        const statsList = [
+            { label: 'Enemies Destroyed', value: gameStats.enemiesDestroyed || 0 },
+            { label: 'Shots Fired', value: gameStats.shotsFired || 0 },
+            { label: 'Accuracy', value: gameStats.accuracy || '0%' },
+            { label: 'Survival Time', value: gameStats.survivalTime || '0:00' }
+        ];
+
+        statsList.forEach(stat => {
+            const statRow = document.createElement('div');
+            statRow.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                margin: 8px 0;
+                color: #CCCCCC;
+                font-size: 1rem;
+            `;
+            statRow.innerHTML = `<span>${stat.label}:</span><span style="color: ${playerWon ? '#FFD700' : '#FF4444'}; font-weight: bold;">${stat.value}</span>`;
+            statsContainer.appendChild(statRow);
+        });
+    }
+
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = `
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    `;    const userMenu = this.createStyledButton('User Menu', '#4CAF50', () => {
+        document.body.removeChild(modal);
+        // Show user statistics page
+        if (this.ui && typeof this.ui.showUserStatistics === 'function') {
+            this.ui.showUserStatistics();
+        } else {
+            console.warn('UI showUserStatistics method not available');
+        }
+    });
+
+    const menuBtn = this.createStyledButton('Difficulty Menu', '#2196F3', () => {
+        document.body.removeChild(modal);
+        this.ui.showDifficultySelector();
+    });
+
+    buttonContainer.appendChild(userMenu);
+    buttonContainer.appendChild(menuBtn);
+
+    content.appendChild(title);
+    content.appendChild(subtitle);
+    content.appendChild(difficultyBadge);
+    if (statsContainer.children.length > 0) {
+        content.appendChild(statsContainer);
+    }
+    content.appendChild(buttonContainer);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    // Animate in
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        content.style.transform = 'scale(1)';
+    }, 100);
+}
+
+createStyledButton(text, color, onClick) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.style.cssText = `
+        background: ${color};
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        min-width: 140px;
+    `;
+    
+    button.addEventListener('mouseenter', () => {
+        button.style.transform = 'translateY(-2px)';
+        button.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.4)';
+    });
+    
+    button.addEventListener('mouseleave', () => {
+        button.style.transform = 'translateY(0)';
+        button.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+    });
+    
+    button.addEventListener('click', onClick);
+    return button;
+}    checkWinCondition() {
         // Return early if the game is already in GAME_OVER state
         if (this.gameState === 'GAME_OVER') return;
 
         // Check if player's tank is destroyed
         if (this.playerTank.isDestroyed) {
-            // Player loses
-            this.gameOver(false);
+            // Player loses - pass current game statistics
+            const gameStats = {
+                shotsFired: this.gameStats?.shotsFired || 0,
+                tanksDestroyed: this.gameStats?.tanksDestroyed || 0,
+                gameStartTime: this.gameStats?.gameStartTime || null
+            };
+            this.gameOver(false, gameStats);
             return;
         }
 
         // Check if all enemy tanks are destroyed
         const allEnemiesDestroyed = this.enemyTanks.every(tank => tank.isDestroyed);
         if (allEnemiesDestroyed) {
-            // Player wins
-            this.gameOver(true);
+            // Player wins - pass current game statistics
+            const gameStats = {
+                shotsFired: this.gameStats?.shotsFired || 0,
+                tanksDestroyed: this.gameStats?.tanksDestroyed || 0,
+                gameStartTime: this.gameStats?.gameStartTime || null
+            };
+            this.gameOver(true, gameStats);
             return;
         }
     }
@@ -1524,13 +1894,120 @@ export class Game {
         controlsInfo.classList.remove('hidden');
     }
 
-}
+    updateUserStats(playerWon, gameStats = {}) {
+        const authManager = window.mainAppInstance?.authManager;
+        const currentUser = authManager?.getCurrentUser();
+        
+        if (!currentUser) {
+            console.warn('No user logged in, stats not saved');
+            return;
+        }
 
-// Make mobile controls accessible globally for testing
-window.forceMobileControls = function () {
-    if (window.gameInstance && window.gameInstance.mobileControls) {
-        window.gameInstance.mobileControls.forceEnable();
-    } else {
-        console.log('Game instance or mobile controls not available');
+        try {
+            // Get current user data
+            let userData = localStorage.getItem('tankGame_userData');
+            let userRecord = userData ? JSON.parse(userData) : null;
+            
+            if (!userRecord || userRecord.uid !== currentUser.uid) {
+                console.warn('User data not found or mismatch');
+                return;
+            }
+
+            // Update statistics
+            if (!userRecord.resources) {
+                userRecord.resources = {
+                    victories: 0,
+                    defeats: 0,
+                    gamesPlayed: 0,
+                    shotsFired: 0,
+                    tanksDestroyed: 0,
+                    experience: 0,
+                    level: 1
+                };
+            }
+
+            // Update game stats
+            userRecord.resources.gamesPlayed += 1;
+            
+            if (playerWon) {
+                userRecord.resources.victories += 1;
+                userRecord.resources.experience += 100; // Victory bonus
+            } else {
+                userRecord.resources.defeats += 1;
+                userRecord.resources.experience += 25; // Participation points
+            }
+
+            // Add additional stats if provided
+            if (gameStats.shotsFired) {
+                userRecord.resources.shotsFired += gameStats.shotsFired;
+                userRecord.resources.experience += gameStats.shotsFired * 2; // 2 exp per shot
+            }
+            
+            if (gameStats.tanksDestroyed) {
+                userRecord.resources.tanksDestroyed += gameStats.tanksDestroyed;
+                userRecord.resources.experience += gameStats.tanksDestroyed * 50; // 50 exp per tank destroyed
+            }
+
+            // Level up calculation
+            const newLevel = Math.floor(userRecord.resources.experience / 1000) + 1;
+            if (newLevel > userRecord.resources.level) {
+                userRecord.resources.level = newLevel;
+                this.showLevelUpNotification(newLevel);
+            }
+
+            // Save updated data
+            localStorage.setItem('tankGame_userData', JSON.stringify(userRecord));
+            console.log('User stats updated:', userRecord.resources);
+
+        } catch (error) {
+            console.error('Failed to update user stats:', error);
+        }
     }
-};
+
+    showLevelUpNotification(newLevel) {
+        // Create level up notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            z-index: 200;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+            animation: levelUpPulse 2s ease-in-out;
+        `;
+        
+        notification.innerHTML = `
+            <div style="font-size: 2rem; margin-bottom: 10px;">🎉</div>
+            <div>LEVEL UP!</div>
+            <div style="font-size: 1.2rem; margin-top: 5px;">Level ${newLevel}</div>
+        `;
+
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes levelUpPulse {
+                0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        document.body.appendChild(notification);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            document.body.removeChild(notification);
+            document.head.removeChild(style);
+        }, 3000);
+    }
+
+}

@@ -301,6 +301,38 @@ canvas {
     margin-top: 15px;
 }
 
+/* UI Button Styles - Added back from UI.js */
+.ui-button {
+    background: linear-gradient(135deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+    border: 2px solid #daa520;
+    color: #fff;
+    padding: 12px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.3s ease;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 3px rgba(255, 255, 255, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.ui-button:hover {
+    background: linear-gradient(135deg, #a0522d 0%, #cd853f 50%, #a0522d 100%);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.4),
+        0 0 15px rgba(218, 165, 32, 0.4),
+        inset 0 1px 3px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
 /* Settings Button - Quick Access */
 .settings-btn {
     position: fixed !important;
@@ -346,7 +378,41 @@ canvas {
         inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* Turn Status Light - Added back from UI.js */
+#turn-status-light {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #666;
+    border: 2px solid #444;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
 
+#turn-status-light.player-turn,
+#turn-status-light[data-turn="player"] {
+    background: radial-gradient(circle, #00ff41 0%, #00cc33 100%);
+    border-color: #00aa22;
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
+}
+
+#turn-status-light.enemy-turn,
+#turn-status-light[data-turn="enemy"] {
+    background: radial-gradient(circle, #ff4444 0%, #cc0000 100%);
+    border-color: #aa0000;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.6);
+}
+
+/* Mobile Hidden - Added back from UI.js */
+.mobile-hidden {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .mobile-hidden {
+        display: none !important;
+    }
+}
 
 /* Controls Info - Tactical Display */
 #controls-info {
@@ -401,8 +467,8 @@ canvas {
 
 /* Mobile Controls - Hidden by default on desktop */
 #mobile-controls {
-    z-index: 25000 !important;
-    display: none;
+    z-index: 2500 !important;
+    display: none !important;
 }
 
 /* Message Overlay - Military Alert Style */
@@ -443,6 +509,117 @@ canvas {
     color: #ffd700;
     margin-bottom: 15px;
     text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
+
+/* Game Over Container - Added back from UI.js */
+.game-over-container {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, 
+        rgba(139, 69, 19, 0.95) 0%, 
+        rgba(160, 82, 45, 0.95) 50%, 
+        rgba(139, 69, 19, 0.95) 100%);
+    border-radius: 15px;
+    border: 4px solid #daa520;
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    box-shadow: 
+        0 0 30px rgba(218, 165, 32, 0.4),
+        0 10px 25px rgba(0, 0, 0, 0.6),
+        inset 0 2px 5px rgba(255, 255, 255, 0.2);
+}
+
+.game-over-container h2 {
+    margin: 0 0 20px 0;
+    font-size: 36px;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 15px rgba(255, 215, 0, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.game-over-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+/* Generic Button Styles - Added back from UI.js */
+.btn {
+    background: linear-gradient(135deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+    border: 3px solid #daa520;
+    color: #fff;
+    padding: 15px 25px;
+    font-size: 16px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.4s ease;
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.4),
+        inset 0 2px 5px rgba(255, 255, 255, 0.2);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    background: linear-gradient(135deg, #a0522d 0%, #cd853f 50%, #a0522d 100%);
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.4),
+        0 0 25px rgba(218, 165, 32, 0.5),
+        inset 0 2px 5px rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+    border-color: #ffcc00;
+}
+
+.btn:active {
+    transform: translateY(-1px);
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.4),
+        inset 0 2px 5px rgba(255, 255, 255, 0.1);
+}
+
+/* Temporary Messages - Added back from UI.js */
+.temp-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, 
+        rgba(45, 62, 35, 0.95) 0%, 
+        rgba(35, 45, 25, 0.95) 50%, 
+        rgba(25, 35, 20, 0.95) 100%);
+    color: #00ff41;
+    padding: 20px 30px;
+    border-radius: 10px;
+    border: 3px solid #4a5d23;
+    font-family: 'Rajdhani', monospace;
+    font-weight: 600;
+    font-size: 18px;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+    box-shadow: 
+        0 10px 25px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(74, 93, 35, 0.3),
+        inset 0 2px 5px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.5s ease;
+    pointer-events: none;
+}
+
+.temp-message.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
 }
 
 /* Health Bar Styles - Military HUD */
@@ -548,30 +725,6 @@ canvas {
     animation: damageFlash 0.5s ease-in-out;
 }
 
-/* Damage Flash Animation - Enhanced */
-@keyframes damageFlash {
-    0% {
-        border-color: rgba(74, 93, 35, 0.8);
-        box-shadow: 0 0 5px rgba(74, 93, 35, 0.3);
-    }
-    25% {
-        border-color: rgba(255, 255, 0, 1);
-        box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
-    }
-    50% {
-        border-color: rgba(255, 0, 0, 1);
-        box-shadow: 0 0 25px rgba(255, 0, 0, 1);
-    }
-    75% {
-        border-color: rgba(255, 140, 0, 1);
-        box-shadow: 0 0 15px rgba(255, 140, 0, 0.8);
-    }
-    100% {
-        border-color: rgba(74, 93, 35, 0.8);
-        box-shadow: 0 0 5px rgba(74, 93, 35, 0.3);
-    }
-}
-
 /* Difficulty Selection Overlay - Military Command Selection */
 #difficulty-overlay {
     position: fixed;
@@ -586,9 +739,16 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 150000;
+    z-index: 2501;
     font-family: 'Orbitron', monospace;
     backdrop-filter: blur(3px);
+    opacity: 1;
+    transform: scale(1);
+    transition: all 0.5s ease;
+}
+
+#difficulty-overlay[hidden] {
+    display: none ;
 }
 
 .difficulty-content {
@@ -694,7 +854,7 @@ canvas {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.difficulty-btn[data-difficulty="beginner"]:hover {
+.difficulty-btn[data-difficulty="sargent"]:hover {
     border-color: #27ae60;
     background: linear-gradient(135deg, 
         rgba(39, 174, 96, 0.2) 0%, 
@@ -705,7 +865,7 @@ canvas {
         0 0 25px rgba(39, 174, 96, 0.4);
 }
 
-.difficulty-btn[data-difficulty="professional"]:hover {
+.difficulty-btn[data-difficulty="lieutenant"]:hover {
     border-color: #f39c12;
     background: linear-gradient(135deg, 
         rgba(243, 156, 18, 0.2) 0%, 
@@ -716,7 +876,7 @@ canvas {
         0 0 25px rgba(243, 156, 18, 0.4);
 }
 
-.difficulty-btn[data-difficulty="veteran"]:hover {
+.difficulty-btn[data-difficulty="colonel"]:hover {
     border-color: #e74c3c;
     background: linear-gradient(135deg, 
         rgba(231, 76, 60, 0.2) 0%, 
@@ -738,7 +898,7 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 50000;
+    z-index: 1500;
     backdrop-filter: blur(5px);
     transition: all 0.3s ease;
 }
@@ -1029,18 +1189,18 @@ body.mobile-device #mobile-controls {
 /* Mobile controls should always be above scope overlay */
 body.scope-active #mobile-controls,
 #mobile-controls.scope-active {
-    z-index: 30000 !important;
+    z-index: 3000 !important;
     display: flex !important;
 }
 
 /* Ensure individual mobile control buttons are visible above scope */
 .mobile-control-group {
-    z-index: 30001 !important;
+    z-index: 3001 !important;
     position: relative;
 }
 
 .dpad-btn, .action-btn, .power-btn {
-    z-index: 30002 !important;
+    z-index: 3001 !important;
     position: relative;
 }
 
@@ -1478,7 +1638,7 @@ body.scope-active #mobile-controls,
 
     /* Make message overlay more mobile-friendly */
     #message-overlay {
-        padding: 20px 25px;
+        padding: 10px 15px;
         font-size: 20px;
         max-width: 90vw;
         word-wrap: break-word;
