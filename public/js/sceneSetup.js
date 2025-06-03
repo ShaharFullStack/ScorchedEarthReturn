@@ -148,7 +148,7 @@ function generateAdvancedNoise(x, y, seed) {
     const baseHeight = 3.0 + Math.sin(seed + x * 0.01) * 0.8;
 
     // Large mountain features
-    const mountains = (Math.sin((x + seed * 10) * 0.05) * Math.cos((y + seed * 15) * 0.04) + 1) / 2 * 6.0;
+    const mountains = (Math.sin((x + seed * 10) * 0.05) * Math.cos((y + seed * 15) * 0.04) + 1) / 2 * 12.0;
 
     // Rolling hills
     const hills = (Math.sin((x + seed * 25) * 0.12) * Math.cos((y + seed * 30) * 0.1) + 1) / 2 * 3.0;
