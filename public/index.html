@@ -165,22 +165,18 @@
     <div id="message-overlay">Game Over!</div>
     <!-- Mobile UI Optimizer Script -->
     <script>
-      // Improved mobile detection that exactly matches main.js logic
+      // Improved mobile detection that matches main.js logic
       function detectMobile() {
-        // Check user agent for mobile devices
-        const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        // Check for touch capabilities (be more strict - both conditions needed)
-        const hasTouchScreen = ('ontouchstart' in window) && (navigator.maxTouchPoints > 0);
-
-        // Check screen size (use the same threshold as main.js)
+        const isMobileUserAgent =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          );
+        const hasTouchScreen =
+          "ontouchstart" in window && navigator.maxTouchPoints > 0;
         const isSmallScreen = window.innerWidth <= 768;
 
-        // For testing purposes, also check localStorage
-        const forceEnable = localStorage.getItem('forceMobileControls') === 'true';
-
-        // Mobile device = mobile user agent OR (touch + small screen) OR force enabled
-        return isMobileUserAgent || (hasTouchScreen && isSmallScreen) || forceEnable;
+        // More strict detection: mobile user agent OR (touch + small screen)
+        return isMobileUserAgent || (hasTouchScreen && isSmallScreen);
       }
 
       // Quick mobile detection and initial setup
