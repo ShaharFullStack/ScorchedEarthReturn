@@ -250,7 +250,7 @@ class FirstPersonCameraController {
       this.rotationX -= e.movementY * this.mouseSensitivity;
 
       // Limit vertical rotation
-      this.rotationX = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, this.rotationX));
+      this.rotationX = Math.max(Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, this.rotationX));
     });
   }
 

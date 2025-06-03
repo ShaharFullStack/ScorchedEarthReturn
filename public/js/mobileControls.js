@@ -418,11 +418,10 @@ export class MobileControls {
 
     /**
      * Create simple mobile scope overlay with green tint and circular scope
-     */
-  createMobileScopeOverlay() {
+     */  createMobileScopeOverlay() {
     // Create scope overlay with green tint and circular scope view
     this.scopeOverlay = document.createElement('div');
-    this.scopeOverlay.id = 'scope-overlay';
+    this.scopeOverlay.id = 'mobile-scope-overlay';  // Use unique ID for mobile
     this.scopeOverlay.style.cssText = `
       position: fixed;
       top: 0;
@@ -553,9 +552,10 @@ export class MobileControls {
     this.crosshair.appendChild(horizontalLine5);
     this.scopeOverlay.appendChild(scopeCircle);
     this.scopeOverlay.appendChild(this.crosshair);
-    this.scopeOverlay.appendChild(distanceDisplay);
-
-    document.body.appendChild(this.scopeOverlay);
+    this.scopeOverlay.appendChild(distanceDisplay);    document.body.appendChild(this.scopeOverlay);
+    
+    // Assign the created overlay to scopeState for touch controls
+    this.scopeState.overlay = this.scopeOverlay;
   }
 
     /**
@@ -629,15 +629,15 @@ export class MobileControls {
         // Show mobile scope overlay
         if (this.scopeState.overlay) {
             this.scopeState.overlay.style.display = 'block';
-        }
-
-        // Keep mobile controls visible but add scope-active class for higher z-index
+        }        // Keep mobile controls visible but add scope-active class for higher z-index
         const mobileControls = document.getElementById('mobile-controls');
         if (mobileControls) {
             mobileControls.classList.add('scope-active');
-            // Ensure they stay visible
-            mobileControls.style.display = 'flex';
-            mobileControls.style.zIndex = '3005';
+            // Only show mobile controls if this is actually a mobile device
+            if (this.isEnabled) {
+                mobileControls.style.display = 'flex';
+                mobileControls.style.zIndex = '30000';
+            }
         }
 
         // Add scope-active class to body for additional CSS targeting
@@ -662,14 +662,18 @@ export class MobileControls {
         if (desktopScopeOverlay) {
             desktopScopeOverlay.style.display = 'none';
             console.log('Hidden desktop scope overlay to prevent dual overlay issue');
-        }
-
-        // Remove scope-active classes and reset z-index
+        }        // Remove scope-active classes and reset z-index
         const mobileControls = document.getElementById('mobile-controls');
         if (mobileControls) {
             mobileControls.classList.remove('scope-active');
-            mobileControls.style.display = 'flex';
-            mobileControls.style.zIndex = '3000'; // Reset to default high value
+            // Only show mobile controls if this is actually a mobile device
+            if (this.isEnabled) {
+                mobileControls.style.display = 'flex';
+                mobileControls.style.zIndex = '25000'; // Reset to default high value
+            } else {
+                // Ensure mobile controls stay hidden on desktop
+                mobileControls.style.display = 'none';
+            }
         }
 
         // Remove scope-active class from body

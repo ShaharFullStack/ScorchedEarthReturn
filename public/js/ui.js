@@ -188,34 +188,90 @@ export class UI {
     }
 
     showGameOverMessage(message) {
+        // Parse the message to extract victory/defeat and difficulty
+        const isVictory = message.includes('Victory');
+        const difficultyMatch = message.match(/(\w+) Difficulty/);
+        const difficulty = difficultyMatch ? difficultyMatch[1] : 'Unknown';
+        
+        // Create title based on outcome
+        const title = isVictory ? '🏆 VICTORY! 🏆' : '💀 DEFEAT 💀';
+        const resultClass = isVictory ? 'victory' : 'defeat';
+        
         // Create a stylish game over overlay
         this.messageOverlay.innerHTML = `
-            <div class="game-over-container">
-                <h2>Game Over</h2>
-                <p>${message.replace('\n', '<br>')}</p>
+            <div class="game-over-container ${resultClass}">
+                <h2>${title}</h2>
+                <p>${message.replace(/\n/g, '<br>')}</p>
                 <div class="game-over-buttons">
-                    <button id="restart-game-btn" class="btn">Play Again</button>
-                    <button id="return-menu-btn" class="btn">Return to Menu</button>
+                    <button id="restart-game-btn" class="btn">
+                        🔄 Play Again
+                    </button>
+                    <button id="return-menu-btn" class="btn">
+                        🏠 Return to Menu
+                    </button>
                 </div>
             </div>
         `;
         
+        // Show with smooth animation
         this.messageOverlay.style.display = 'flex';
+        this.messageOverlay.classList.add('show');
         
         // Add event listeners to buttons
-        document.getElementById('restart-game-btn').addEventListener('click', () => {
+        document.getElementById('restart-game-btn').addEventListener('click', (e) => {
+            // Play button sound if available
+            if (this.audioManager) {
+                this.audioManager.playSound('click', 0.7);
+            }
             this.hideGameOverMessage();
-            // Reload the page to restart the game
-            location.reload();
+            // Small delay for sound effect
+            setTimeout(() => {
+                location.reload();
+            }, 200);
         });
         
-        document.getElementById('return-menu-btn').addEventListener('click', () => {
-            this.restartGame();
+        document.getElementById('return-menu-btn').addEventListener('click', (e) => {
+            // Play button sound if available
+            if (this.audioManager) {
+                this.audioManager.playSound('click', 0.7);
+            }
+            setTimeout(() => {
+                this.restartGame();
+            }, 200);
         });
+        
+        // Add keyboard support for better accessibility
+        const handleKeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                // Default to restart game
+                document.getElementById('restart-game-btn').click();
+            } else if (e.key === 'Escape') {
+                // Return to menu
+                document.getElementById('return-menu-btn').click();
+            }
+        };
+        
+        document.addEventListener('keydown', handleKeydown);
+        
+        // Store reference to remove listener later
+        this._gameOverKeyHandler = handleKeydown;
     }
 
     hideGameOverMessage() {
-        this.messageOverlay.style.display = 'none';
+        // Remove keyboard event listener
+        if (this._gameOverKeyHandler) {
+            document.removeEventListener('keydown', this._gameOverKeyHandler);
+            this._gameOverKeyHandler = null;
+        }
+        
+        // Add fade-out animation
+        this.messageOverlay.classList.remove('show');
+        
+        // Hide after animation completes
+        setTimeout(() => {
+            this.messageOverlay.style.display = 'none';
+            this.messageOverlay.innerHTML = ''; // Clean up
+        }, 300);
     }
     
     showMessage(message, duration = 3000) {

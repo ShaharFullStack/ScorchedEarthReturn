@@ -880,9 +880,7 @@ export class Tank {
         console.log(`Tank ${this.id}: Taking ${amount} damage. Health: ${oldHealth} -> ${this.currentHealth}`);
         
         // Play tank hit sound effect
-        if (this.game.audioManager) {
-            this.game.audioManager.playSound('tankHit');
-        }          if (this.currentHealth <= 0) {
+          if (this.currentHealth <= 0) {
             this.currentHealth = 0;
             this.isDestroyed = true;
             
