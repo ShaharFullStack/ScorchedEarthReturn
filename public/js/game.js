@@ -13,9 +13,10 @@ const PLAYER_ID = 'player';
 const ENEMY_ID_PREFIX = 'enemy_';
 
 // Difficulty configurations
-const DIFFICULTY_SETTINGS = {    sargent: {
+const DIFFICULTY_SETTINGS = {
+    sargent: {
         name: "Sargent",
-        aiReactionTime: 600,
+        aiReactionTime: 600,  // Slowest - gives player more time to think
         aimAccuracy: 0.3,
         strategicThinking: 0.2,
         aggressiveness: 0.3,
@@ -26,7 +27,7 @@ const DIFFICULTY_SETTINGS = {    sargent: {
     },
     lieutenant: {
         name: "Lieutenant",
-        aiReactionTime: 1200,
+        aiReactionTime: 1200,  // Medium speed
         aimAccuracy: 0.7,
         strategicThinking: 0.6,
         aggressiveness: 0.6,
@@ -34,16 +35,17 @@ const DIFFICULTY_SETTINGS = {    sargent: {
         coverUsage: 0.7,
         playerHealthBonus: 0,
         playerFuelBonus: 0
-    },    colonel: {
+    },
+    colonel: {
         name: "Colonel",
-        aiReactionTime: 2700,
+        aiReactionTime: 2000,   // Fastest - creates pressure and challenge
         aimAccuracy: 0.95,
         strategicThinking: 0.9,
-        aggressiveness: 0.8,
+        aggressiveness: 1.0,  // Maximum aggressiveness
         fuelEfficiency: 0.95,
-        coverUsage: 0.9,
-        playerHealthBonus: -10,
-        playerFuelBonus: -10
+        coverUsage: 0.9,      
+        playerHealthBonus: -15, // Even more challenging for player
+        playerFuelBonus: -15
     }
 };
 
@@ -69,7 +71,7 @@ export class Game {
         this.enemyTanks = [];
         this.projectiles = [];
         this.buildings = [];
-        this.trees = [];        this.currentPlayerIndex = -1;
+        this.trees = []; this.currentPlayerIndex = -1;
         this.activeTank = null;
         this.cameraController = null;
         this.difficulty = 'lieutenant'; // Default to medium if not set properly
@@ -118,13 +120,13 @@ export class Game {
 
     setCameraController(controller) {
         this.cameraController = controller;
-    }    setDifficulty(difficulty) {
+    } setDifficulty(difficulty) {
         console.log(`Game: Setting difficulty to: ${difficulty}`);
         if (!DIFFICULTY_SETTINGS[difficulty]) {
             console.error(`Invalid difficulty: ${difficulty}. Using default.`);
             difficulty = 'lieutenant'; // Fallback to medium difficulty
         }
-        
+
         this.difficulty = difficulty;
         this.difficultyConfig = DIFFICULTY_SETTINGS[difficulty];
         console.log(`Game: Difficulty set to: ${this.difficultyConfig.name}`);
@@ -135,14 +137,9 @@ export class Game {
         this.gameState = 'INITIALIZING';
         await this.initGame();
         this.startGame();
-    }
-
-    async initGame() {
-        // Clear existing entities
-        this.buildings = [];
-        this.trees = [];
-        this.enemyTanks = [];
-        this.projectiles = [];
+    }    async initGame() {
+        // Perform comprehensive cleanup before generating new map
+        this.cleanupExistingGame();
 
         // Generate buildings first
         this.buildings = generateBuildings(this.scene, [], 15);
@@ -250,7 +247,7 @@ export class Game {
             this.enemyTanks.push(enemy);
             this.scene.add(enemy.mesh);
         }
-    }    startGame() {
+    } startGame() {
         this.gameState = 'PLAYER_TURN';
         this.currentPlayerIndex = -1;
         this.activeTank = this.playerTank;
@@ -308,7 +305,7 @@ export class Game {
         this.currentPlayerIndex++;
         if (this.currentPlayerIndex >= this.enemyTanks.length) {
             this.currentPlayerIndex = -1;
-        }        if (this.currentPlayerIndex === -1) {
+        } if (this.currentPlayerIndex === -1) {
             this.activeTank = this.playerTank;
             if (this.activeTank.isDestroyed) {
                 // Player loses - pass current game statistics
@@ -365,13 +362,14 @@ export class Game {
         // Advanced AI decision making
         const aiDecision = this.makeAIDecision(enemy, playerPos, distanceToPlayer);
 
-        this.ui.updateActionIndicator(`Enemy is ${aiDecision.action}...`);
-
-        // Execute AI decision
+        this.ui.updateActionIndicator(`Enemy is ${aiDecision.action}...`);        // Execute AI decision
         this.executeAIDecision(enemy, aiDecision);
 
-        // End turn with appropriate delay
-        const turnDelay = Math.max(800, 2000 - (this.difficultyConfig.strategicThinking * 1200));
+        // End turn with appropriate delay - aggressive AI acts faster
+        const baseDelay = Math.max(800, 2000 - (this.difficultyConfig.strategicThinking * 1200));
+        const aggressivenessSpeedup = this.difficultyConfig.aggressiveness >= 1.0 ? 0.4 : 
+                                     (this.difficultyConfig.aggressiveness > 0.7 ? 0.7 : 1.0);
+        const turnDelay = Math.max(400, baseDelay * aggressivenessSpeedup);
         setTimeout(() => {
             // Check for win condition before proceeding to next turn
             this.checkWinCondition();
@@ -379,9 +377,7 @@ export class Game {
                 this.nextTurn();
             }
         }, turnDelay);
-    }
-    
-    // AI decision making using collision system for line of sight checks
+    }    // AI decision making using collision system for line of sight checks
     makeAIDecision(enemy, playerPos, distanceToPlayer) {
         const config = enemy.aiDifficulty;
         const enemyPos = enemy.mesh.position.clone();
@@ -394,40 +390,54 @@ export class Game {
         const lowHealth = enemy.currentHealth < enemy.maxHealth * 0.4;
         const lowFuel = enemy.currentFuel < enemy.maxFuel * 0.3;
 
-        // Strategic decision matrix based on difficulty
+        // Aggressiveness affects decision making
+        const isAggressive = config.aggressiveness > 0.7;
+        const isVeryAggressive = config.aggressiveness >= 1.0;        // Strategic decision matrix based on difficulty
         let decision = { action: 'thinking', priority: 0 };
 
-        // HIGH PRIORITY: Shoot if opportunity exists
-        if (hasAmmo && playerInRange && decision.priority < 9) {
-            const canAttemptShot = lineOfSight || (distanceToPlayer < 30);
-
-            if (canAttemptShot) {
-                const baseAccuracy = Math.max(0.3, config.aimAccuracy * 0.8);
-                decision = {
-                    action: 'engaging target',
-                    type: 'shoot',
-                    accuracy: baseAccuracy,
-                    priority: 9
-                };
+        // HIGHEST PRIORITY: Always shoot at player if ammo is available
+        if (hasAmmo) {
+            // Tanks will always attempt to shoot at the player every turn
+            const baseAccuracy = Math.max(0.2, config.aimAccuracy * 0.8);
+            decision = {
+                action: 'engaging target',
+                type: 'shoot',
+                accuracy: baseAccuracy,
+                priority: 10
+            };
+        }        // Emergency retreat if low health (only if already fired this turn)
+        if (!hasAmmo && lowHealth && config.strategicThinking > 0.5 && decision.priority < 8) {
+            const retreatChance = isVeryAggressive ? 0.3 : (isAggressive ? 0.6 : 1.0);
+            
+            if (Math.random() < retreatChance) {
+                const coverPosition = this.findBestCover(enemyPos, playerPos);
+                if (coverPosition && !inCover) {
+                    decision = {
+                        action: 'retreating to cover',
+                        type: 'move',
+                        target: coverPosition,
+                        priority: 8
+                    };
+                }
             }
         }
 
-        // Emergency retreat if low health
-        if (lowHealth && config.strategicThinking > 0.5 && decision.priority < 8) {
-            const coverPosition = this.findBestCover(enemyPos, playerPos);
-            if (coverPosition && !inCover) {
+        // AGGRESSIVE PURSUIT: Very aggressive AI pursues player more actively (only if already fired)
+        if (!hasAmmo && isVeryAggressive && distanceToPlayer > 20 && decision.priority < 8) {
+            const pursuitPosition = this.getAggressivePosition(enemyPos, playerPos, distanceToPlayer);
+            if (pursuitPosition) {
                 decision = {
-                    action: 'retreating to cover',
+                    action: 'pursuing target aggressively',
                     type: 'move',
-                    target: coverPosition,
+                    target: pursuitPosition,
                     priority: 8
                 };
             }
-        }
-
-        // Medium priority: Tactical positioning
-        if (config.strategicThinking > 0.6 && decision.priority < 7) {
-            if (!inCover && config.coverUsage > Math.random()) {
+        }        // Medium priority: Tactical positioning (only if already fired)
+        if (!hasAmmo && config.strategicThinking > 0.6 && decision.priority < 7) {
+            const seekCoverChance = Math.max(0.2, config.coverUsage - (config.aggressiveness * 0.5));
+            
+            if (!inCover && seekCoverChance > Math.random()) {
                 const coverPosition = this.findBestCover(enemyPos, playerPos);
                 if (coverPosition) {
                     decision = {
@@ -450,9 +460,22 @@ export class Game {
             }
         }
 
-        // Low priority: Basic movement
-        if (decision.priority < 5) {
-            const idealDistance = 25;
+        // Aggressive movement: Get closer for better shots (only if already fired)
+        if (!hasAmmo && isAggressive && decision.priority < 6) {
+            const aggressiveDistance = isVeryAggressive ? 15 : 20; // Closer engagement distance
+            
+            if (distanceToPlayer > aggressiveDistance + 10) {
+                decision = {
+                    action: 'closing distance aggressively',
+                    type: 'move',
+                    target: this.getPositionTowards(enemyPos, playerPos, aggressiveDistance),
+                    priority: 6
+                };
+            }
+        }        // Low priority: Basic movement (only if already fired)
+        if (!hasAmmo && decision.priority < 5) {
+            const idealDistance = isAggressive ? 20 : 25; // Aggressive AI prefers closer combat
+            
             if (distanceToPlayer > idealDistance + 15) {
                 decision = {
                     action: 'advancing on target',
@@ -460,7 +483,8 @@ export class Game {
                     target: this.getPositionTowards(enemyPos, playerPos, idealDistance),
                     priority: 4
                 };
-            } else if (distanceToPlayer < idealDistance - 5) {
+            } else if (distanceToPlayer < idealDistance - 5 && !isVeryAggressive) {
+                // Very aggressive AI doesn't back away
                 decision = {
                     action: 'maintaining distance',
                     type: 'move',
@@ -470,19 +494,17 @@ export class Game {
             }
         }
 
-        // Fallback: Wait and aim
-        if (decision.priority < 3) {
+        // Fallback: Wait and aim (only if already fired)
+        if (!hasAmmo && decision.priority < 3) {
             decision = {
-                action: 'aiming',
+                action: isAggressive ? 'preparing to strike' : 'aiming',
                 type: 'aim',
                 priority: 1
             };
         }
 
         return decision;
-    }
-
-    executeAIDecision(enemy, decision) {
+    }    executeAIDecision(enemy, decision) {
         const config = enemy.aiDifficulty;
 
         switch (decision.type) {
@@ -497,12 +519,16 @@ export class Game {
             case 'aim':
                 this.executeAIAim(enemy);
                 break;
-        }
-    }
 
-    executeAIShoot(enemy, baseAccuracy) {
+            default:
+                console.log(`AI ${enemy.id}: No valid decision type, defaulting to aim`);
+                this.executeAIAim(enemy);
+                break;
+        }
+    }executeAIShoot(enemy, baseAccuracy) {
         const playerPos = this.playerTank.mesh.position.clone();
         const enemyPos = enemy.mesh.position.clone();
+        const config = enemy.aiDifficulty;
 
         // Aim at target horizontally
         enemy.aimTowards(playerPos);
@@ -511,8 +537,11 @@ export class Game {
         const distance = enemyPos.distanceTo(playerPos);
         const heightDiff = playerPos.y - enemyPos.y;
 
+        // Aggressive AI uses higher power for more devastating shots
+        const powerMultiplier = config.aggressiveness >= 1.0 ? 1.2 : 1.0;
+        
         // Start with a reasonable power estimate based on distance
-        let estimatedPower = Math.min(enemy.maxPower, Math.max(enemy.minPower, distance * 1.5 + 20));
+        let estimatedPower = Math.min(enemy.maxPower, Math.max(enemy.minPower, distance * 1.5 * powerMultiplier + 20));
         enemy.currentPower = estimatedPower;
 
         // Calculate physics-based elevation with current power
@@ -669,15 +698,18 @@ export class Game {
         const finalPower = Math.max(minPowerForDistance, calculatedPower);
 
         return Math.max(tank.minPower, Math.min(tank.maxPower, finalPower));
-    }
-
-    executeAIMove(enemy, targetPosition) {
+    }    executeAIMove(enemy, targetPosition) {
         if (!targetPosition || enemy.currentFuel <= 0) return;
 
         const enemyPos = enemy.mesh.position.clone();
         const direction = targetPosition.clone().sub(enemyPos).normalize();
+        const config = enemy.aiDifficulty;
+        
+        // Aggressive AI moves further and more boldly
+        const aggressivenessBonus = config.aggressiveness >= 1.0 ? 1.3 : (config.aggressiveness > 0.7 ? 1.15 : 1.0);
+        
         const moveDistance = Math.min(
-            enemy.currentFuel / 20,
+            (enemy.currentFuel / 20) * aggressivenessBonus,
             enemyPos.distanceTo(targetPosition)
         );
 
@@ -687,16 +719,36 @@ export class Game {
         for (let i = 0; i < 5 && enemy.currentFuel > 0; i++) {
             enemy.move(direction, actualMoveDistance / 5);
         }
-    }
-
-    executeAIAim(enemy) {
+    }    executeAIAim(enemy) {
         const playerPos = this.playerTank.mesh.position.clone();
-        enemy.aimTowards(playerPos);
+        const config = enemy.aiDifficulty;
+        
+        // Aggressive AI aims with predictive targeting
+        let targetPos = playerPos.clone();
+        
+        // Predictive aiming for aggressive AI - tries to anticipate player movement
+        if (config.aggressiveness >= 1.0) {
+            // Predict player movement based on recent position changes
+            if (enemy.lastKnownPlayerPosition) {
+                const playerMovement = playerPos.clone().sub(enemy.lastKnownPlayerPosition);
+                const movementMagnitude = playerMovement.length();
+                
+                // If player is moving, lead the target
+                if (movementMagnitude > 1) {
+                    const leadFactor = Math.min(2, movementMagnitude * 0.5);
+                    targetPos.add(playerMovement.normalize().multiplyScalar(leadFactor));
+                }
+            }
+        }
+        
+        enemy.aimTowards(targetPos);
 
-        const distance = enemy.mesh.position.distanceTo(playerPos);
-        const heightDiff = playerPos.y - enemy.mesh.position.y;
+        const distance = enemy.mesh.position.distanceTo(targetPos);
+        const heightDiff = targetPos.y - enemy.mesh.position.y;
 
-        const estimatedPower = Math.min(enemy.maxPower, Math.max(enemy.minPower, distance * 1.5 + 20));
+        // Aggressive AI uses higher power multipliers for more devastating shots
+        const powerMultiplier = config.aggressiveness >= 1.0 ? 1.2 : (config.aggressiveness > 0.7 ? 1.1 : 1.0);
+        const estimatedPower = Math.min(enemy.maxPower, Math.max(enemy.minPower, distance * 1.5 * powerMultiplier + 20));
         enemy.currentPower = estimatedPower;
 
         const optimalElevation = this.calculatePhysicsBasedElevation(distance, heightDiff, enemy);
@@ -707,8 +759,14 @@ export class Game {
         );
 
         const elevationDiff = targetElevation - enemy.barrelElevation;
-        const elevationStep = Math.sign(elevationDiff) * Math.min(Math.abs(elevationDiff), enemy.barrelElevateSpeed * 0.2);
+        
+        // Aggressive AI aims faster and more decisively
+        const aimSpeed = config.aggressiveness >= 1.0 ? 0.35 : (config.aggressiveness > 0.7 ? 0.25 : 0.2);
+        const elevationStep = Math.sign(elevationDiff) * Math.min(Math.abs(elevationDiff), enemy.barrelElevateSpeed * aimSpeed);
         enemy.elevateBarrel(elevationStep);
+        
+        // Store current player position for predictive aiming next turn
+        enemy.lastKnownPlayerPosition = playerPos.clone();
     }
 
     // AI Helper Functions - Updated to use collision system
@@ -833,39 +891,55 @@ export class Game {
         const calculatedElevation = baseElevation + arcAdjustment;
 
         return Math.max(-Math.PI / 24, Math.min(Math.PI / 4, calculatedElevation));
-    }
-
-    calculateShootingAccuracy(enemy, targetPos, distance) {
+    }    calculateShootingAccuracy(enemy, targetPos, distance) {
+        const config = enemy.aiDifficulty;
         let accuracy = 0.9;
 
-        accuracy -= Math.min(0.2, distance / 200);
+        // Distance penalty (reduced for aggressive AI)
+        const distancePenalty = config.aggressiveness >= 1.0 ? 
+            Math.min(0.15, distance / 250) : // Colonel AI has less distance penalty
+            Math.min(0.2, distance / 200);
+        accuracy -= distancePenalty;
 
+        // Fuel penalty (aggressive AI fights even when low on fuel)
         if (enemy.currentFuel < enemy.maxFuel * 0.8) {
-            accuracy -= 0.05;
+            const fuelPenalty = config.aggressiveness >= 1.0 ? 0.02 : 0.05;
+            accuracy -= fuelPenalty;
         }
 
+        // Line of sight bonus (aggressive AI gets bigger bonus)
         if (this.hasLineOfSight(enemy.mesh.position, targetPos)) {
-            accuracy += 0.1;
+            const losBonus = config.aggressiveness >= 1.0 ? 0.15 : 0.1;
+            accuracy += losBonus;
         }
 
+        // Close range bonus (aggressive AI excels at close combat)
         if (distance < 20) {
-            accuracy += 0.15;
+            const closeBonus = config.aggressiveness >= 1.0 ? 0.25 : 0.15;
+            accuracy += closeBonus;
         }
 
-        return Math.max(0.3, Math.min(1, accuracy));
-    }    endPlayerTurn() {
+        // Aggressiveness bonus for taking risky shots
+        if (config.aggressiveness >= 1.0) {
+            accuracy += 0.1; // Colonel AI gets overall accuracy boost
+        }
+
+        // Set minimum accuracy based on aggressiveness
+        const minAccuracy = config.aggressiveness >= 1.0 ? 0.4 : 0.3;
+        return Math.max(minAccuracy, Math.min(1, accuracy));
+    }endPlayerTurn() {
         if (this.gameState === 'PLAYER_TURN') {
             // Exit any active scope mode before ending turn
             // Exit desktop barrel scope if active
             if (window.mainApp && window.mainApp.exitBarrelScope) {
                 window.mainApp.exitBarrelScope();
             }
-            
+
             // Exit mobile scope if active
             if (this.mobileControls && this.mobileControls.exitMobileScope) {
                 this.mobileControls.exitMobileScope();
             }
-            
+
             this.nextTurn();
         }
     }
@@ -948,7 +1022,7 @@ export class Game {
             } else {
                 // USE COLLISION SYSTEM INSTEAD OF OLD METHOD
                 if (this.collisionSystem) {
-                    const collisionResult = this.collisionSystem.checkProjectileCollisions(p);                    if (collisionResult.hasCollision) {
+                    const collisionResult = this.collisionSystem.checkProjectileCollisions(p); if (collisionResult.hasCollision) {
                         this.collisionSystem.applyCollisionEffects(collisionResult, p);
                         this.scene.remove(p.mesh);
                         this.projectiles.splice(i, 1);
@@ -956,7 +1030,7 @@ export class Game {
                         // Update UI if tank was hit
                         if (collisionResult.type === 'tank') {
                             this.ui.updateHealth(collisionResult.tank.id, collisionResult.tank.currentHealth, collisionResult.tank.maxHealth);
-                            
+
                             // Check if this hit caused a tank to be destroyed
                             if (collisionResult.tank.isDestroyed) {
                                 // Delay the check to let destruction animations play
@@ -993,10 +1067,10 @@ export class Game {
             }
         }
         // Input handling is now done in handlePlayerInput method
-    }    addProjectile(projectile) {
+    } addProjectile(projectile) {
         this.projectiles.push(projectile);
         this.scene.add(projectile.mesh);
-        
+
         // Track shots fired for statistics
         if (this.gameStats) {
             this.gameStats.shotsFired++;
@@ -1024,7 +1098,7 @@ export class Game {
                 tank.takeDamage(projectile.damage);
                 this.ui.updateHealth(tank.id, tank.currentHealth, tank.maxHealth);
                 projectile.shouldBeRemoved = true;
-                
+
                 // After damage is applied, check if win condition achieved
                 // We delay this check to allow animations to complete
                 if (tank.isDestroyed) {
@@ -1032,7 +1106,7 @@ export class Game {
                         this.checkWinCondition();
                     }, 1000);
                 }
-                
+
                 return;
             }
         }
@@ -1354,257 +1428,257 @@ export class Game {
 
         fadeAnimation();
     }
-gameOver(playerWon, gameStats = {}) {
-    if (this.gameState === 'GAME_OVER') return;
-    this.gameState = 'GAME_OVER';
+    gameOver(playerWon, gameStats = {}) {
+        if (this.gameState === 'GAME_OVER') return;
+        this.gameState = 'GAME_OVER';
 
-    console.log(`Game over! ${playerWon ? 'Player won' : 'Player lost'}`);
+        console.log(`Game over! ${playerWon ? 'Player won' : 'Player lost'}`);
 
-    // Merge provided gameStats with collected game statistics
-    const finalGameStats = {
-        ...gameStats,
-        shotsFired: this.gameStats?.shotsFired || 0,
-        tanksDestroyed: this.gameStats?.tanksDestroyed || 0,
-        gameStartTime: this.gameStats?.gameStartTime || null
-    };
+        // Merge provided gameStats with collected game statistics
+        const finalGameStats = {
+            ...gameStats,
+            shotsFired: this.gameStats?.shotsFired || 0,
+            tanksDestroyed: this.gameStats?.tanksDestroyed || 0,
+            gameStartTime: this.gameStats?.gameStartTime || null
+        };
 
-    // Update user statistics if user is logged in
-    this.updateUserStats(playerWon, finalGameStats);
+        // Update user statistics if user is logged in
+        this.updateUserStats(playerWon, finalGameStats);
 
-    // Enhanced camera sequence with multiple phases
-    if (this.cameraController) {
-        this.createCinematicGameOverSequence(playerWon);
-    }
-
-    // Stop all game sounds and create audio atmosphere
-    if (this.audioManager) {
-        this.audioManager.stopAllContinuousSounds();
-        this.audioManager.stopAllMusic();
-        this.createGameOverAudio(playerWon);
-    }
-
-    // Create enhanced visual effects
-    this.createGameOverVisualEffects(playerWon);
-
-    // Show enhanced game over UI after cinematic sequence
-    setTimeout(() => {
-        this.showEnhancedGameOverUI(playerWon, finalGameStats);
-    }, 2500);
-    
-    this.ui.toggleEndTurnButton(false);
-}
-
-createCinematicGameOverSequence(playerWon) {
-    const totalDuration = 4000;
-    const phase1Duration = 1500; // Initial dramatic pause
-    const phase2Duration = 2500; // Camera movement
-    
-    const startPosition = this.camera.position.clone();
-    const startRotation = this.camera.rotation.clone();
-    const startTime = Date.now();
-
-    // Phase 1: Dramatic pause with slight shake
-    const phase1 = () => {
-        const elapsed = Date.now() - startTime;
-        if (elapsed < phase1Duration) {
-            // Subtle camera shake for impact
-            const intensity = playerWon ? 0.1 : 0.3;
-            const shake = {
-                x: (Math.random() - 0.5) * intensity,
-                y: (Math.random() - 0.5) * intensity,
-                z: (Math.random() - 0.5) * intensity
-            };
-            
-            this.camera.position.copy(startPosition.clone().add(shake));
-            requestAnimationFrame(phase1);
-        } else {
-            // Reset position and start phase 2
-            this.camera.position.copy(startPosition);
-            phase2();
+        // Enhanced camera sequence with multiple phases
+        if (this.cameraController) {
+            this.createCinematicGameOverSequence(playerWon);
         }
-    };
 
-    // Phase 2: Cinematic camera movement
-    const phase2 = () => {
-        const elapsed = Date.now() - startTime - phase1Duration;
-        const progress = Math.min(elapsed / phase2Duration, 1);
-        
-        // Different camera movements based on outcome
-        if (playerWon) {
-            // Victory: Rise up and look down at the battlefield
-            const easedProgress = 1 - Math.pow(1 - progress, 2); // Quadratic easing
-            const newPosition = startPosition.clone();
-            newPosition.y += 25 * easedProgress;
-            newPosition.z += 15 * easedProgress;
-            
-            // Slight downward tilt to survey the battlefield
-            const newRotation = startRotation.clone();
-            newRotation.x -= 0.3 * easedProgress;
-            
-            this.camera.position.copy(newPosition);
-            this.camera.rotation.copy(newRotation);
-        } else {
-            // Defeat: Dramatic pull back and tilt
-            const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic easing
-            const newPosition = startPosition.clone();
-            newPosition.y += 15 * easedProgress;
-            newPosition.z += 20 * easedProgress;
-            newPosition.x += 10 * Math.sin(progress * Math.PI) * easedProgress;
-            
-            this.camera.position.copy(newPosition);
+        // Stop all game sounds and create audio atmosphere
+        if (this.audioManager) {
+            this.audioManager.stopAllContinuousSounds();
+            this.audioManager.stopAllMusic();
+            this.createGameOverAudio(playerWon);
         }
-        
-        if (progress < 1) {
-            requestAnimationFrame(phase2);
-        }
-    };
 
-    phase1();
-}
+        // Create enhanced visual effects
+        this.createGameOverVisualEffects(playerWon);
 
-createGameOverAudio(playerWon) {
-    if (playerWon) {
-        // Victory audio sequence
-        setTimeout(() => this.audioManager.playSound('victory_fanfare'), 500);
-        setTimeout(() => this.audioManager.playMusic('victory_theme', 0.7), 1000);
-    } else {
-        // Defeat audio sequence
-        this.audioManager.playSound('tank_destruction');
-        setTimeout(() => this.audioManager.playSound('explosion_large'), 300);
-        setTimeout(() => this.audioManager.playSound('defeat_sting'), 800);
-        setTimeout(() => this.audioManager.playMusic('defeat_theme', 0.5), 1500);
-    }
-}
+        // Show enhanced game over UI after cinematic sequence
+        setTimeout(() => {
+            this.showEnhancedGameOverUI(playerWon, finalGameStats);
+        }, 2500);
 
-createGameOverVisualEffects(playerWon) {
-    // Create particle effect overlay
-    this.createParticleEffect(playerWon);
-    
-    // Enhanced color overlay with animation
-    this.createAnimatedOverlay(playerWon);
-    
-    // Screen flash effect
-    this.createScreenFlash(playerWon);
-}
-
-createParticleEffect(playerWon) {
-    const canvas = document.createElement('canvas');
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.pointerEvents = 'none';
-    canvas.style.zIndex = '45';
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    document.body.appendChild(canvas);
-
-    const ctx = canvas.getContext('2d');
-    const particles = [];
-    const particleCount = playerWon ? 100 : 50;
-
-    // Create particles
-    for (let i = 0; i < particleCount; i++) {
-        particles.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * (playerWon ? 4 : 2),
-            vy: (Math.random() - 0.5) * (playerWon ? 4 : 2),
-            size: Math.random() * (playerWon ? 6 : 3) + 2,
-            opacity: 1,
-            color: playerWon ? 
-                `hsl(${Math.random() * 60 + 40}, 100%, 70%)` : // Gold/yellow for victory
-                `hsl(${Math.random() * 30}, 100%, 50%)` // Red/orange for defeat
-        });
+        this.ui.toggleEndTurnButton(false);
     }
 
-    const animateParticles = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        particles.forEach((particle, index) => {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            particle.opacity -= 0.01;
-            particle.size *= 0.995;
-            
-            if (particle.opacity <= 0) {
-                particles.splice(index, 1);
-                return;
+    createCinematicGameOverSequence(playerWon) {
+        const totalDuration = 4000;
+        const phase1Duration = 1500; // Initial dramatic pause
+        const phase2Duration = 2500; // Camera movement
+
+        const startPosition = this.camera.position.clone();
+        const startRotation = this.camera.rotation.clone();
+        const startTime = Date.now();
+
+        // Phase 1: Dramatic pause with slight shake
+        const phase1 = () => {
+            const elapsed = Date.now() - startTime;
+            if (elapsed < phase1Duration) {
+                // Subtle camera shake for impact
+                const intensity = playerWon ? 0.1 : 0.3;
+                const shake = {
+                    x: (Math.random() - 0.5) * intensity,
+                    y: (Math.random() - 0.5) * intensity,
+                    z: (Math.random() - 0.5) * intensity
+                };
+
+                this.camera.position.copy(startPosition.clone().add(shake));
+                requestAnimationFrame(phase1);
+            } else {
+                // Reset position and start phase 2
+                this.camera.position.copy(startPosition);
+                phase2();
             }
-            
-            ctx.save();
-            ctx.globalAlpha = particle.opacity;
-            ctx.fillStyle = particle.color;
-            ctx.beginPath();
-            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        });
-        
-        if (particles.length > 0) {
-            requestAnimationFrame(animateParticles);
-        } else {
-            document.body.removeChild(canvas);
-        }
-    };
+        };
 
-    setTimeout(animateParticles, 1000);
-}
+        // Phase 2: Cinematic camera movement
+        const phase2 = () => {
+            const elapsed = Date.now() - startTime - phase1Duration;
+            const progress = Math.min(elapsed / phase2Duration, 1);
 
-createAnimatedOverlay(playerWon) {
-    const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.pointerEvents = 'none';
-    overlay.style.zIndex = '40';
-    overlay.style.opacity = '0';
-    
-    if (playerWon) {
-        overlay.style.background = 'radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(0,255,0,0.1) 50%, transparent 100%)';
-    } else {
-        overlay.style.background = 'radial-gradient(circle, rgba(255,0,0,0.3) 0%, rgba(139,0,0,0.2) 50%, transparent 100%)';
+            // Different camera movements based on outcome
+            if (playerWon) {
+                // Victory: Rise up and look down at the battlefield
+                const easedProgress = 1 - Math.pow(1 - progress, 2); // Quadratic easing
+                const newPosition = startPosition.clone();
+                newPosition.y += 25 * easedProgress;
+                newPosition.z += 15 * easedProgress;
+
+                // Slight downward tilt to survey the battlefield
+                const newRotation = startRotation.clone();
+                newRotation.x -= 0.3 * easedProgress;
+
+                this.camera.position.copy(newPosition);
+                this.camera.rotation.copy(newRotation);
+            } else {
+                // Defeat: Dramatic pull back and tilt
+                const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic easing
+                const newPosition = startPosition.clone();
+                newPosition.y += 15 * easedProgress;
+                newPosition.z += 20 * easedProgress;
+                newPosition.x += 10 * Math.sin(progress * Math.PI) * easedProgress;
+
+                this.camera.position.copy(newPosition);
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(phase2);
+            }
+        };
+
+        phase1();
     }
-    
-    document.body.appendChild(overlay);
-    
-    // Animate overlay
-    overlay.style.transition = 'opacity 1.5s ease-in-out';
-    setTimeout(() => overlay.style.opacity = '1', 100);
-    
-    setTimeout(() => {
+
+    createGameOverAudio(playerWon) {
+        if (playerWon) {
+            // Victory audio sequence
+            setTimeout(() => this.audioManager.playSound('victory_fanfare'), 500);
+            setTimeout(() => this.audioManager.playMusic('victory_theme', 0.7), 1000);
+        } else {
+            // Defeat audio sequence
+            this.audioManager.playSound('tank_destruction');
+            setTimeout(() => this.audioManager.playSound('explosion_large'), 300);
+            setTimeout(() => this.audioManager.playSound('defeat_sting'), 800);
+            setTimeout(() => this.audioManager.playMusic('defeat_theme', 0.5), 1500);
+        }
+    }
+
+    createGameOverVisualEffects(playerWon) {
+        // Create particle effect overlay
+        this.createParticleEffect(playerWon);
+
+        // Enhanced color overlay with animation
+        this.createAnimatedOverlay(playerWon);
+
+        // Screen flash effect
+        this.createScreenFlash(playerWon);
+    }
+
+    createParticleEffect(playerWon) {
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '45';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const particles = [];
+        const particleCount = playerWon ? 100 : 50;
+
+        // Create particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * (playerWon ? 4 : 2),
+                vy: (Math.random() - 0.5) * (playerWon ? 4 : 2),
+                size: Math.random() * (playerWon ? 6 : 3) + 2,
+                opacity: 1,
+                color: playerWon ?
+                    `hsl(${Math.random() * 60 + 40}, 100%, 70%)` : // Gold/yellow for victory
+                    `hsl(${Math.random() * 30}, 100%, 50%)` // Red/orange for defeat
+            });
+        }
+
+        const animateParticles = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach((particle, index) => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.opacity -= 0.01;
+                particle.size *= 0.995;
+
+                if (particle.opacity <= 0) {
+                    particles.splice(index, 1);
+                    return;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = particle.opacity;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animateParticles);
+            } else {
+                document.body.removeChild(canvas);
+            }
+        };
+
+        setTimeout(animateParticles, 1000);
+    }
+
+    createAnimatedOverlay(playerWon) {
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '40';
         overlay.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(overlay), 1500);
-    }, 3000);
-}
 
-createScreenFlash(playerWon) {
-    const flash = document.createElement('div');
-    flash.style.position = 'fixed';
-    flash.style.top = '0';
-    flash.style.left = '0';
-    flash.style.width = '100%';
-    flash.style.height = '100%';
-    flash.style.backgroundColor = playerWon ? 'rgba(255,255,255,0.8)' : 'rgba(255,0,0,0.6)';
-    flash.style.pointerEvents = 'none';
-    flash.style.zIndex = '60';
-    flash.style.opacity = '1';
-    flash.style.transition = 'opacity 0.3s ease-out';
-    document.body.appendChild(flash);
-    
-    setTimeout(() => {
-        flash.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(flash), 300);
-    }, 100);
-}
+        if (playerWon) {
+            overlay.style.background = 'radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(0,255,0,0.1) 50%, transparent 100%)';
+        } else {
+            overlay.style.background = 'radial-gradient(circle, rgba(255,0,0,0.3) 0%, rgba(139,0,0,0.2) 50%, transparent 100%)';
+        }
 
-showEnhancedGameOverUI(playerWon, gameStats) {
-    // Create modern game over modal
-    const modal = document.createElement('div');
-    modal.style.cssText = `
+        document.body.appendChild(overlay);
+
+        // Animate overlay
+        overlay.style.transition = 'opacity 1.5s ease-in-out';
+        setTimeout(() => overlay.style.opacity = '1', 100);
+
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => document.body.removeChild(overlay), 1500);
+        }, 3000);
+    }
+
+    createScreenFlash(playerWon) {
+        const flash = document.createElement('div');
+        flash.style.position = 'fixed';
+        flash.style.top = '0';
+        flash.style.left = '0';
+        flash.style.width = '100%';
+        flash.style.height = '100%';
+        flash.style.backgroundColor = playerWon ? 'rgba(255,255,255,0.8)' : 'rgba(255,0,0,0.6)';
+        flash.style.pointerEvents = 'none';
+        flash.style.zIndex = '60';
+        flash.style.opacity = '1';
+        flash.style.transition = 'opacity 0.3s ease-out';
+        document.body.appendChild(flash);
+
+        setTimeout(() => {
+            flash.style.opacity = '0';
+            setTimeout(() => document.body.removeChild(flash), 300);
+        }, 100);
+    }
+
+    showEnhancedGameOverUI(playerWon, gameStats) {
+        // Create modern game over modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
@@ -1620,8 +1694,8 @@ showEnhancedGameOverUI(playerWon, gameStats) {
         transition: opacity 0.5s ease-in-out;
     `;
 
-    const content = document.createElement('div');
-    content.style.cssText = `
+        const content = document.createElement('div');
+        content.style.cssText = `
         background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(40, 40, 50, 0.95));
         border: 2px solid ${playerWon ? '#FFD700' : '#FF4444'};
         border-radius: 20px;
@@ -1634,9 +1708,9 @@ showEnhancedGameOverUI(playerWon, gameStats) {
         transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     `;
 
-    const title = document.createElement('h1');
-    title.textContent = playerWon ? '🏆 VICTORY!' : '💥 DEFEAT';
-    title.style.cssText = `
+        const title = document.createElement('h1');
+        title.textContent = playerWon ? '🏆 VICTORY!' : '💥 DEFEAT';
+        title.style.cssText = `
         font-family: 'Arial Black', Arial, sans-serif;
         font-size: 3.5rem;
         margin: 0 0 20px 0;
@@ -1645,12 +1719,12 @@ showEnhancedGameOverUI(playerWon, gameStats) {
         letter-spacing: 3px;
     `;
 
-    const subtitle = document.createElement('h2');
-    const difficultyText = this.difficultyConfig?.name || 'Unknown';
-    subtitle.textContent = playerWon ? 
-        `All Enemies Destroyed!` : 
-        `Your Tank Was Destroyed!`;
-    subtitle.style.cssText = `
+        const subtitle = document.createElement('h2');
+        const difficultyText = this.difficultyConfig?.name || 'Unknown';
+        subtitle.textContent = playerWon ?
+            `All Enemies Destroyed!` :
+            `Your Tank Was Destroyed!`;
+        subtitle.style.cssText = `
         font-family: Arial, sans-serif;
         font-size: 1.4rem;
         margin: 0 0 30px 0;
@@ -1658,9 +1732,9 @@ showEnhancedGameOverUI(playerWon, gameStats) {
         font-weight: normal;
     `;
 
-    const difficultyBadge = document.createElement('div');
-    difficultyBadge.textContent = `${difficultyText} Difficulty`;
-    difficultyBadge.style.cssText = `
+        const difficultyBadge = document.createElement('div');
+        difficultyBadge.textContent = `${difficultyText} Difficulty`;
+        difficultyBadge.style.cssText = `
         display: inline-block;
         background: ${playerWon ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'};
         border: 1px solid ${playerWon ? '#FFD700' : '#FF4444'};
@@ -1672,93 +1746,93 @@ showEnhancedGameOverUI(playerWon, gameStats) {
         font-weight: bold;
     `;
 
-    // Add stats if provided
-    const statsContainer = document.createElement('div');
-    if (gameStats && Object.keys(gameStats).length > 0) {
-        statsContainer.style.cssText = `
+        // Add stats if provided
+        const statsContainer = document.createElement('div');
+        if (gameStats && Object.keys(gameStats).length > 0) {
+            statsContainer.style.cssText = `
             background: rgba(0, 0, 0, 0.3);
             border-radius: 10px;
             padding: 20px;
             margin: 20px 0;
             text-align: left;
         `;
-        
-        const statsTitle = document.createElement('h3');
-        statsTitle.textContent = '📊 Battle Statistics';
-        statsTitle.style.cssText = `
+
+            const statsTitle = document.createElement('h3');
+            statsTitle.textContent = '📊 Battle Statistics';
+            statsTitle.style.cssText = `
             color: #FFFFFF;
             margin: 0 0 15px 0;
             text-align: center;
             font-size: 1.3rem;
         `;
-        statsContainer.appendChild(statsTitle);
+            statsContainer.appendChild(statsTitle);
 
-        const statsList = [
-            { label: 'Enemies Destroyed', value: gameStats.enemiesDestroyed || 0 },
-            { label: 'Shots Fired', value: gameStats.shotsFired || 0 },
-            { label: 'Accuracy', value: gameStats.accuracy || '0%' },
-            { label: 'Survival Time', value: gameStats.survivalTime || '0:00' }
-        ];
+            const statsList = [
+                { label: 'Enemies Destroyed', value: gameStats.enemiesDestroyed || 0 },
+                { label: 'Shots Fired', value: gameStats.shotsFired || 0 },
+                { label: 'Accuracy', value: gameStats.accuracy || '0%' },
+                { label: 'Survival Time', value: gameStats.survivalTime || '0:00' }
+            ];
 
-        statsList.forEach(stat => {
-            const statRow = document.createElement('div');
-            statRow.style.cssText = `
+            statsList.forEach(stat => {
+                const statRow = document.createElement('div');
+                statRow.style.cssText = `
                 display: flex;
                 justify-content: space-between;
                 margin: 8px 0;
                 color: #CCCCCC;
                 font-size: 1rem;
             `;
-            statRow.innerHTML = `<span>${stat.label}:</span><span style="color: ${playerWon ? '#FFD700' : '#FF4444'}; font-weight: bold;">${stat.value}</span>`;
-            statsContainer.appendChild(statRow);
-        });
-    }
+                statRow.innerHTML = `<span>${stat.label}:</span><span style="color: ${playerWon ? '#FFD700' : '#FF4444'}; font-weight: bold;">${stat.value}</span>`;
+                statsContainer.appendChild(statRow);
+            });
+        }
 
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.cssText = `
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = `
         margin-top: 30px;
         display: flex;
         gap: 15px;
         justify-content: center;
-    `;    const userMenu = this.createStyledButton('User Menu', '#4CAF50', () => {
-        document.body.removeChild(modal);
-        // Show user statistics page
-        if (this.ui && typeof this.ui.showUserStatistics === 'function') {
-            this.ui.showUserStatistics();
-        } else {
-            console.warn('UI showUserStatistics method not available');
+    `; const userMenu = this.createStyledButton('User Menu', '#4CAF50', () => {
+            document.body.removeChild(modal);
+            // Show user statistics page
+            if (this.ui && typeof this.ui.showUserStatistics === 'function') {
+                this.ui.showUserStatistics();
+            } else {
+                console.warn('UI showUserStatistics method not available');
+            }
+        });
+
+        const menuBtn = this.createStyledButton('Difficulty Menu', '#2196F3', () => {
+            document.body.removeChild(modal);
+            this.ui.showDifficultySelector();
+        });
+
+        buttonContainer.appendChild(userMenu);
+        buttonContainer.appendChild(menuBtn);
+
+        content.appendChild(title);
+        content.appendChild(subtitle);
+        content.appendChild(difficultyBadge);
+        if (statsContainer.children.length > 0) {
+            content.appendChild(statsContainer);
         }
-    });
+        content.appendChild(buttonContainer);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
 
-    const menuBtn = this.createStyledButton('Difficulty Menu', '#2196F3', () => {
-        document.body.removeChild(modal);
-        this.ui.showDifficultySelector();
-    });
-
-    buttonContainer.appendChild(userMenu);
-    buttonContainer.appendChild(menuBtn);
-
-    content.appendChild(title);
-    content.appendChild(subtitle);
-    content.appendChild(difficultyBadge);
-    if (statsContainer.children.length > 0) {
-        content.appendChild(statsContainer);
+        // Animate in
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            content.style.transform = 'scale(1)';
+        }, 100);
     }
-    content.appendChild(buttonContainer);
-    modal.appendChild(content);
-    document.body.appendChild(modal);
 
-    // Animate in
-    setTimeout(() => {
-        modal.style.opacity = '1';
-        content.style.transform = 'scale(1)';
-    }, 100);
-}
-
-createStyledButton(text, color, onClick) {
-    const button = document.createElement('button');
-    button.textContent = text;
-    button.style.cssText = `
+    createStyledButton(text, color, onClick) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.style.cssText = `
         background: ${color};
         border: none;
         color: white;
@@ -1771,20 +1845,20 @@ createStyledButton(text, color, onClick) {
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         min-width: 140px;
     `;
-    
-    button.addEventListener('mouseenter', () => {
-        button.style.transform = 'translateY(-2px)';
-        button.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.4)';
-    });
-    
-    button.addEventListener('mouseleave', () => {
-        button.style.transform = 'translateY(0)';
-        button.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
-    });
-    
-    button.addEventListener('click', onClick);
-    return button;
-}    checkWinCondition() {
+
+        button.addEventListener('mouseenter', () => {
+            button.style.transform = 'translateY(-2px)';
+            button.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.4)';
+        });
+
+        button.addEventListener('mouseleave', () => {
+            button.style.transform = 'translateY(0)';
+            button.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+        });
+
+        button.addEventListener('click', onClick);
+        return button;
+    } checkWinCondition() {
         // Return early if the game is already in GAME_OVER state
         if (this.gameState === 'GAME_OVER') return;
 
@@ -1824,7 +1898,7 @@ createStyledButton(text, color, onClick) {
                 case 'KeyD': this.inputStates.rotateRight = true; break;
                 case 'KeyQ': this.inputStates.turretLeft = true; break;
                 case 'KeyE': this.inputStates.turretRight = true; break;
-                case 'Space': 
+                case 'Space':
                     if (!this.playerTank.hasFiredThisTurn) {
                         this.inputStates.fire = true;
                     } else {
@@ -1897,7 +1971,7 @@ createStyledButton(text, color, onClick) {
     updateUserStats(playerWon, gameStats = {}) {
         const authManager = window.mainAppInstance?.authManager;
         const currentUser = authManager?.getCurrentUser();
-        
+
         if (!currentUser) {
             console.warn('No user logged in, stats not saved');
             return;
@@ -1907,7 +1981,7 @@ createStyledButton(text, color, onClick) {
             // Get current user data
             let userData = localStorage.getItem('tankGame_userData');
             let userRecord = userData ? JSON.parse(userData) : null;
-            
+
             if (!userRecord || userRecord.uid !== currentUser.uid) {
                 console.warn('User data not found or mismatch');
                 return;
@@ -1928,7 +2002,7 @@ createStyledButton(text, color, onClick) {
 
             // Update game stats
             userRecord.resources.gamesPlayed += 1;
-            
+
             if (playerWon) {
                 userRecord.resources.victories += 1;
                 userRecord.resources.experience += 100; // Victory bonus
@@ -1942,7 +2016,7 @@ createStyledButton(text, color, onClick) {
                 userRecord.resources.shotsFired += gameStats.shotsFired;
                 userRecord.resources.experience += gameStats.shotsFired * 2; // 2 exp per shot
             }
-            
+
             if (gameStats.tanksDestroyed) {
                 userRecord.resources.tanksDestroyed += gameStats.tanksDestroyed;
                 userRecord.resources.experience += gameStats.tanksDestroyed * 50; // 50 exp per tank destroyed
@@ -1983,7 +2057,7 @@ createStyledButton(text, color, onClick) {
             box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
             animation: levelUpPulse 2s ease-in-out;
         `;
-        
+
         notification.innerHTML = `
             <div style="font-size: 2rem; margin-bottom: 10px;">🎉</div>
             <div>LEVEL UP!</div>
@@ -2008,6 +2082,133 @@ createStyledButton(text, color, onClick) {
             document.body.removeChild(notification);
             document.head.removeChild(style);
         }, 3000);
+    }
+
+    getAggressivePosition(fromPos, targetPos, distance) {
+        // Aggressive AI tries to get closer while maintaining some tactical positioning
+        const direction = targetPos.clone().sub(fromPos).normalize();
+        
+        // Try to get closer but with some variation to avoid predictability
+        const aggressiveDistance = Math.max(10, distance * 0.6); // Get significantly closer
+        const sideOffset = (Math.random() - 0.5) * 10; // Add some lateral movement
+        
+        // Create perpendicular vector for side movement
+        const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x);
+        
+        // Calculate aggressive position
+        const aggressivePos = fromPos.clone()
+            .add(direction.multiplyScalar(aggressiveDistance * 0.4))
+            .add(perpendicular.multiplyScalar(sideOffset));
+        
+        // Ensure position is not too close (minimum 8 units)
+        if (aggressivePos.distanceTo(targetPos) < 8) {
+            const safeDirection = fromPos.clone().sub(targetPos).normalize();
+            return targetPos.clone().add(safeDirection.multiplyScalar(8));
+        }
+        
+        return aggressivePos;
+    }
+
+    /**
+     * Comprehensive cleanup method for "play again" functionality
+     * Removes all game entities from scene and resets game state
+     */
+    cleanupExistingGame() {
+        console.log('Performing comprehensive game cleanup for restart...');
+
+        // Stop all audio
+        if (this.audioManager) {
+            this.audioManager.stopAllContinuousSounds();
+            this.audioManager.stopAllMusic();
+        }
+
+        // Remove player tank from scene
+        if (this.playerTank && this.playerTank.mesh) {
+            this.scene.remove(this.playerTank.mesh);
+            this.playerTank = null;
+        }
+
+        // Remove all enemy tanks from scene
+        this.enemyTanks.forEach(tank => {
+            if (tank && tank.mesh) {
+                this.scene.remove(tank.mesh);
+            }
+        });
+        this.enemyTanks = [];
+
+        // Remove all projectiles from scene
+        this.projectiles.forEach(projectile => {
+            if (projectile && projectile.mesh) {
+                this.scene.remove(projectile.mesh);
+            }
+        });
+        this.projectiles = [];
+
+        // Remove all buildings from scene
+        this.buildings.forEach(building => {
+            if (building) {
+                this.scene.remove(building);
+            }
+        });
+        this.buildings = [];
+
+        // Remove all trees from scene
+        this.trees.forEach(tree => {
+            if (tree) {
+                this.scene.remove(tree);
+            }
+        });
+        this.trees = [];
+
+        // Clear any debris or temporary objects (search for objects with specific userData)
+        const objectsToRemove = [];
+        this.scene.traverse((child) => {
+            // Remove any debris, particles, or temporary effects
+            if (child.userData && (
+                child.userData.isDebris || 
+                child.userData.isTempEffect ||
+                child.userData.isProjectileEffect ||
+                child.userData.isExplosion
+            )) {
+                objectsToRemove.push(child);
+            }
+        });
+
+        objectsToRemove.forEach(obj => {
+            if (obj.parent) {
+                obj.parent.remove(obj);
+            }
+        });
+
+        // Reset collision system
+        if (this.collisionSystem) {
+            this.collisionSystem.destroy?.(); // Call destroy method if it exists
+            this.collisionSystem = null;
+        }
+
+        // Reset game state variables
+        this.currentPlayerIndex = -1;
+        this.activeTank = null;
+        this.gameState = 'INITIALIZING';
+        
+        // Reset game statistics
+        this.gameStats = {
+            shotsFired: 0,
+            tanksDestroyed: 0,
+            gameStartTime: null
+        };
+
+        // Clear any input states
+        Object.keys(this.inputStates).forEach(key => {
+            this.inputStates[key] = false;
+        });
+
+        // Clear mobile controls state
+        if (this.mobileControls) {
+            this.mobileControls.clearAllInputStates();
+        }
+
+        console.log('Game cleanup completed. Scene objects removed:', objectsToRemove.length);
     }
 
 }

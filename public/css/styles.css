@@ -1300,14 +1300,40 @@ body.mobile-device #mobile-controls {
         white-space: nowrap;
         flex: 0 0 auto;
     }
-    
-    /* Make turn indicator more prominent but compact */
+      /* Enhanced turn indicator with avatar and interactive features */
     #turn-indicator {
         font-weight: bold;
         color: #ffd700 !important;
         border-left-color: #ffd700 !important;
         flex: 1 1 auto;
         min-width: 120px;
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+        border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+    
+    #turn-indicator:hover {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+        border-color: rgba(255, 215, 0, 0.6);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+    }
+    
+    .player-avatar {
+        width: 20px;
+        height: 20px;
+        border-width: 1px;
+    }
+    
+    #turn-indicator:hover .player-avatar {
+        transform: scale(1.05);
+        box-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
     }
     
     /* Compact button container */

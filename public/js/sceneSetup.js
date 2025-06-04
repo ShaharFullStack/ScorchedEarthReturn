@@ -151,10 +151,10 @@ function generateAdvancedNoise(x, y, seed) {
     const mountains = (Math.sin((x + seed * 10) * 0.05) * Math.cos((y + seed * 15) * 0.04) + 1) / 2 * 12.0;
 
     // Rolling hills
-    const hills = (Math.sin((x + seed * 25) * 0.12) * Math.cos((y + seed * 30) * 0.1) + 1) / 2 * 3.0;
+    const hills = (Math.sin((x + seed * 25) * 0.12) * Math.cos((y + seed * 30) * 0.1) + 1) / 2 * 4.0;
 
     // Medium ridges
-    const ridges = (Math.sin((x + seed * 50) * 0.2) * Math.cos((y + seed * 75) * 0.18) + 1) / 2 * 1.5;
+    const ridges = (Math.sin((x + seed * 50) * 0.2) * Math.cos((y + seed * 75) * 0.18) + 1) / 2 * 2.5;
 
     // Fine details
     const details = (Math.sin((x + seed * 100) * 0.3) * Math.cos((y + seed * 125) * 0.25) + 1) / 2 * 0.75;

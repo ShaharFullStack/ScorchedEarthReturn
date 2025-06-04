@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Projectile } from './projectile.js';
 
 const FUEL_PER_MOVE_ACTION = 7; // Cost for one 'tick' of movement
-const FUEL_PER_ROTATE_ACTION = 4; // Cost for one 'tick' of rotation
+const FUEL_PER_ROTATE_ACTION = 1; // Cost for one 'tick' of rotation
 
 export class Tank {
     constructor(id, isPlayer, scene, initialPosition, color, gameInstance) {

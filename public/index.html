@@ -33,9 +33,11 @@
   </head>
   <body>
     <!-- Compact Mobile-Optimized UI Container -->
-    <div id="ui-container">
-      <!-- Essential game info only -->
-      <p id="turn-indicator">Turn: Player</p>
+    <div id="ui-container">    <!-- Essential game info only -->
+      <div id="turn-indicator" class="turn-indicator-container">
+        <img id="player-avatar" src="" alt="Player" class="player-avatar" style="display: none;">
+        <span id="turn-text">Turn: Player</span>
+      </div>
       <p id="fuel-indicator">Fuel: 100</p>
       <p id="health-indicator">HP: 100</p>
       <p id="power-indicator">Power: 50%</p>
